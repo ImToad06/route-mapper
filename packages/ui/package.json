@@ -1,0 +1,14 @@
+{
+  "name": "@packages/ui",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "svelte": "latest"
+  },
+  "devDependencies": {
+    "@packages/tsconfig": "workspace:*"
+  }
+}

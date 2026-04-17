@@ -1,0 +1,30 @@
+{
+  "name": "route-mapper",
+  "type": "module",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "bun --filter @apps/api dev",
+    "dev:web": "bun --filter web dev",
+    "dev": "bun --filter \"*\" dev",
+    "build": "bun --filter \"*\" build",
+    "db:generate": "bun --filter @packages/db db:generate",
+    "db:migrate": "bun --filter @packages/db db:migrate",
+    "format": "prettier --write .",
+    "lint": "bun --filter \"*\" lint"
+  },
+  "devDependencies": {
+    "@packages/prettier-config": "workspace:*",
+    "@packages/tsconfig": "workspace:*",
+    "@types/bun": "latest",
+    "prettier": "latest",
+    "prettier-plugin-svelte": "latest",
+    "prettier-plugin-tailwindcss": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

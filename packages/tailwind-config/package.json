@@ -1,0 +1,6 @@
+{
+  "name": "@packages/tailwind-config",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./base.js"
+}
