@@ -154,6 +154,9 @@
 						<td
 							class="relative py-4 pr-4 pl-3 text-right text-sm font-medium whitespace-nowrap sm:pr-6"
 						>
+							{#if ruta.status === 'draft'}
+								<button onclick={() => optimizeRoute(ruta.id)} class="text-green-600 hover:text-green-900 mr-4 font-semibold">Optimizar</button>
+							{/if}
 							<button class="text-blue-600 hover:text-blue-900">Detalles</button>
 						</td>
 					</tr>
@@ -292,6 +295,20 @@
 											type="button"
 											onclick={() => (showAddModal = false)}
 											class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-gray-300 ring-inset hover:bg-gray-50 sm:col-start-1 sm:mt-0"
+										>
+											Cancelar
+										</button>
+									</div>
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	{/if}
+</div>
+sm font-semibold text-gray-900 shadow-sm ring-1 ring-gray-300 ring-inset hover:bg-gray-50 sm:col-start-1 sm:mt-0"
 										>
 											Cancelar
 										</button>
