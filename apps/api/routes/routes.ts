@@ -32,6 +32,39 @@ export const deliveryRoutes = new Elysia({ prefix: '/rutas' })
 		const result = await db.select().from(routes).where(eq(routes.id, id));
 		return result[0] || null;
 	})
+	.get('/conductor/:driverId', async ({ params: { driverId } }) => {
+		return await db.select().from(routes).where(eq(routes.driverId, driverId));
+	})
+	.get('/:id/detalle', async ({ params: { id } }) => {
+		const routeResult = await db.select().from(routes).where(eq(routes.id, id));
+		const route = routeResult[0];
+		if (!route) throw new Error('Ruta no encontrada');
+
+		const stops = await db.select().from(routeStops).where(eq(routeStops.routeId, id));
+		const storeIds = stops.map((s) => s.storeId);
+
+		let storesInfo: any[] = [];
+		if (storeIds.length > 0) {
+			storesInfo = await db.select().from(stores).where(inArray(stores.id, storeIds));
+		}
+
+		const storeMap = new Map();
+		for (const s of storesInfo) {
+			storeMap.set(s.id, s);
+		}
+
+		const stopsWithStore = stops
+			.map((stop) => ({
+				...stop,
+				store: storeMap.get(stop.storeId)
+			}))
+			.sort((a, b) => a.stopOrder - b.stopOrder);
+
+		return {
+			...route,
+			stops: stopsWithStore
+		};
+	})
 	.post('/:id/optimizar', async ({ params: { id } }) => {
 		// 1. Obtener la ruta
 		const routeResult = await db.select().from(routes).where(eq(routes.id, id));
