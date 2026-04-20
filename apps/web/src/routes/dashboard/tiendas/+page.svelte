@@ -209,8 +209,8 @@
 											/>
 										</div>
 										<div class="sm:col-span-2">
-											<label class="mb-2 block text-sm leading-6 font-medium text-gray-900"
-												>Ubicación en el mapa</label
+											<span class="mb-2 block text-sm leading-6 font-medium text-gray-900"
+												>Ubicación en el mapa</span
 											>
 											<p class="mb-2 text-xs text-gray-500">
 												Arrastra el marcador o haz clic en el mapa para establecer la ubicación.

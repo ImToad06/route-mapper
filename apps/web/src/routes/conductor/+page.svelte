@@ -3,9 +3,18 @@
 
 	let { data } = $props();
 
-	let selectedDriverId = $state(data.defaultDriver?.id || '');
-	let rutas = $state(data.rutas || []);
+	let selectedDriverId = $state('');
+	let rutas = $state([]);
 	let loading = $state(false);
+
+	$effect(() => {
+		if (data.defaultDriver && !selectedDriverId) {
+			selectedDriverId = data.defaultDriver.id;
+		}
+		if (data.rutas && rutas.length === 0) {
+			rutas = data.rutas;
+		}
+	});
 
 	async function loadRoutes() {
 		if (!selectedDriverId) return;

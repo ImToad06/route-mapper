@@ -255,8 +255,8 @@
 											</select>
 										</div>
 										<div class="mt-2 sm:col-span-2">
-											<label class="mb-2 block text-sm leading-6 font-medium text-gray-900"
-												>Seleccionar Tiendas a Visitar</label
+											<span class="mb-2 block text-sm leading-6 font-medium text-gray-900"
+												>Seleccionar Tiendas a Visitar</span
 											>
 											<div
 												class="h-48 space-y-2 overflow-y-auto rounded-md border border-gray-300 bg-gray-50 p-2"

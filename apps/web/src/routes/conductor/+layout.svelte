@@ -1,5 +1,5 @@
 <script lang="ts">
-	import '../../../app.css';
+	import '../../app.css';
 	let { children } = $props();
 </script>
 
@@ -35,7 +35,10 @@
 			</svg>
 			<span class="text-xs font-medium">Rutas</span>
 		</a>
-		<a href="#" class="flex h-full w-full flex-col items-center justify-center hover:text-blue-600">
+		<a
+			href="/conductor/perfil"
+			class="flex h-full w-full flex-col items-center justify-center hover:text-blue-600"
+		>
 			<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path
 					stroke-linecap="round"
