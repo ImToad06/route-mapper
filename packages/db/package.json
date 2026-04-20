@@ -1,19 +1,29 @@
 {
-  "name": "@packages/db",
-  "version": "1.0.0",
-  "type": "module",
-  "main": "./index.ts",
-  "types": "./index.ts",
-  "scripts": {
-    "db:generate": "bunx drizzle-kit generate",
-    "db:migrate": "bun run migrate.ts"
-  },
-  "dependencies": {
-    "drizzle-orm": "latest",
-    "postgres": "latest"
-  },
-  "devDependencies": {
-    "@packages/tsconfig": "workspace:*",
-    "drizzle-kit": "latest"
-  }
+	"name": "@packages/db",
+	"version": "1.0.0",
+	"type": "module",
+	"author": "ImToad06",
+	"license": "GPL-3.0-or-later",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ImToad06/route-mapper.git"
+	},
+	"homepage": "https://github.com/ImToad06/route-mapper#readme",
+	"bugs": {
+		"url": "https://github.com/ImToad06/route-mapper/issues"
+	},
+	"main": "./index.ts",
+	"types": "./index.ts",
+	"scripts": {
+		"db:generate": "bunx drizzle-kit generate",
+		"db:migrate": "bun run migrate.ts"
+	},
+	"dependencies": {
+		"drizzle-orm": "latest",
+		"postgres": "latest"
+	},
+	"devDependencies": {
+		"@packages/tsconfig": "workspace:*",
+		"drizzle-kit": "latest"
+	}
 }

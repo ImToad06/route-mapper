@@ -3,6 +3,16 @@
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
+	"author": "ImToad06 <jreyesaguilar123@gmail.com>",
+	"license": "GPL-3.0-or-later",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ImToad06/route-mapper.git"
+	},
+	"homepage": "https://github.com/ImToad06/route-mapper#readme",
+	"bugs": {
+		"url": "https://github.com/ImToad06/route-mapper/issues"
+	},
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",

@@ -1,10 +1,10 @@
 export interface User {
-  id: number;
-  name: string;
-  email: string;
+	id: number;
+	name: string;
+	email: string;
 }
 
 export interface ApiMessage {
-  message: string;
-  user?: User;
+	message: string;
+	user?: User;
 }

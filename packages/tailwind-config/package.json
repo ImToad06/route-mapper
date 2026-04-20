@@ -1,6 +1,16 @@
 {
-  "name": "@packages/tailwind-config",
-  "version": "1.0.0",
-  "type": "module",
-  "main": "./base.js"
+	"name": "@packages/tailwind-config",
+	"version": "1.0.0",
+	"type": "module",
+	"author": "ImToad06",
+	"license": "GPL-3.0-or-later",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ImToad06/route-mapper.git"
+	},
+	"homepage": "https://github.com/ImToad06/route-mapper#readme",
+	"bugs": {
+		"url": "https://github.com/ImToad06/route-mapper/issues"
+	},
+	"main": "./base.js"
 }

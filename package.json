@@ -1,30 +1,40 @@
 {
-  "name": "route-mapper",
-  "type": "module",
-  "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
-  "scripts": {
-    "dev:api": "bun --filter @apps/api dev",
-    "dev:web": "bun --filter web dev",
-    "dev": "bun --filter \"*\" dev",
-    "build": "bun --filter \"*\" build",
-    "db:generate": "bun --filter @packages/db db:generate",
-    "db:migrate": "bun --filter @packages/db db:migrate",
-    "format": "prettier --write .",
-    "lint": "bun --filter \"*\" lint"
-  },
-  "devDependencies": {
-    "@packages/prettier-config": "workspace:*",
-    "@packages/tsconfig": "workspace:*",
-    "@types/bun": "latest",
-    "prettier": "latest",
-    "prettier-plugin-svelte": "latest",
-    "prettier-plugin-tailwindcss": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
-  }
+	"name": "route-mapper",
+	"type": "module",
+	"private": true,
+	"author": "ImToad06 <jreyesaguilar123@gmail.com>",
+	"license": "GPL-3.0-or-later",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ImToad06/route-mapper.git"
+	},
+	"homepage": "https://github.com/ImToad06/route-mapper#readme",
+	"bugs": {
+		"url": "https://github.com/ImToad06/route-mapper/issues"
+	},
+	"workspaces": [
+		"apps/*",
+		"packages/*"
+	],
+	"scripts": {
+		"dev:api": "bun --filter @apps/api dev",
+		"dev:web": "bun --filter web dev",
+		"dev": "bun --filter \"*\" dev",
+		"build": "bun --filter \"*\" build",
+		"db:generate": "bun --filter @packages/db db:generate",
+		"db:migrate": "bun --filter @packages/db db:migrate",
+		"format": "prettier --write .",
+		"lint": "bun --filter \"*\" lint"
+	},
+	"devDependencies": {
+		"@packages/prettier-config": "workspace:*",
+		"@packages/tsconfig": "workspace:*",
+		"@types/bun": "latest",
+		"prettier": "latest",
+		"prettier-plugin-svelte": "latest",
+		"prettier-plugin-tailwindcss": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	}
 }

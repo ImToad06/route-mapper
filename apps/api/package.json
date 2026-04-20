@@ -1,20 +1,30 @@
 {
-  "name": "@apps/api",
-  "version": "1.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "bun run --watch index.ts",
-    "start": "bun run index.ts"
-  },
-  "dependencies": {
-    "@packages/types": "workspace:*",
-    "@packages/db": "workspace:*",
-    "@packages/auth": "workspace:*",
-    "elysia": "latest"
-  },
-  "devDependencies": {
-    "@packages/prettier-config": "workspace:*",
-    "@packages/tsconfig": "workspace:*",
-    "@types/bun": "latest"
-  }
+	"name": "@apps/api",
+	"version": "1.0.0",
+	"type": "module",
+	"author": "ImToad06 <jreyesaguilar123@gmail.com>",
+	"license": "GPL-3.0-or-later",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ImToad06/route-mapper.git"
+	},
+	"homepage": "https://github.com/ImToad06/route-mapper#readme",
+	"bugs": {
+		"url": "https://github.com/ImToad06/route-mapper/issues"
+	},
+	"scripts": {
+		"dev": "bun run --watch index.ts",
+		"start": "bun run index.ts"
+	},
+	"dependencies": {
+		"@packages/types": "workspace:*",
+		"@packages/db": "workspace:*",
+		"@packages/auth": "workspace:*",
+		"elysia": "latest"
+	},
+	"devDependencies": {
+		"@packages/prettier-config": "workspace:*",
+		"@packages/tsconfig": "workspace:*",
+		"@types/bun": "latest"
+	}
 }
