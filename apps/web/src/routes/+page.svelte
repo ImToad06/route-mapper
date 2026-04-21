@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ApiMessage } from '@packages/types';
+	import { fetchApi } from '$lib/api';
 	import { onMount } from 'svelte';
 
 	let data = $state<ApiMessage | null>(null);
@@ -7,10 +8,7 @@
 
 	onMount(async () => {
 		try {
-			// In production, this might be behind a proxy or at a specific URL
-			const res = await fetch('http://localhost:3000/');
-			if (!res.ok) throw new Error('Error al conectar con la API');
-			data = await res.json();
+			data = await fetchApi<ApiMessage>('/');
 		} catch (e) {
 			error = (e as Error).message;
 		}

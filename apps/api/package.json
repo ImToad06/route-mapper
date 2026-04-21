@@ -17,9 +17,10 @@
 		"start": "bun run index.ts"
 	},
 	"dependencies": {
-		"@packages/types": "workspace:*",
-		"@packages/db": "workspace:*",
+		"@elysiajs/cors": "^1.4.1",
 		"@packages/auth": "workspace:*",
+		"@packages/db": "workspace:*",
+		"@packages/types": "workspace:*",
 		"elysia": "latest"
 	},
 	"devDependencies": {

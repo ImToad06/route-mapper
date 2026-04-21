@@ -1,5 +1,5 @@
 {
-	"extends": "@packages/tsconfig/svelte.json",
+	"extends": "./.svelte-kit/tsconfig.json",
 	"compilerOptions": {
 		"moduleResolution": "bundler"
 	},

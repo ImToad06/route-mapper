@@ -1,4 +1,5 @@
 import { Elysia } from 'elysia';
+import { cors } from '@elysiajs/cors';
 import { db, users } from '@packages/db';
 import { trucksRoutes } from './routes/trucks';
 import { storesRoutes } from './routes/stores';
@@ -8,6 +9,7 @@ import { ordersRoutes } from './routes/orders';
 import type { ApiMessage } from '@packages/types';
 
 const app = new Elysia()
+	.use(cors())
 	.get('/', () => {
 		const response: ApiMessage = { message: '¡Hola desde Elysia!' };
 		return response;
