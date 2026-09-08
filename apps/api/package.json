@@ -1,0 +1,36 @@
+{
+  "name": "@lh/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./app": "./src/app.ts"
+  },
+  "scripts": {
+    "dev": "bun --env-file=../../.env --watch src/index.ts",
+    "start": "bun src/index.ts",
+    "build": "bun build src/index.ts --target bun --outdir dist",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test --env-file=../../.env",
+    "db:generate": "bun --env-file=../../.env drizzle-kit generate",
+    "db:migrate": "bun --env-file=../../.env src/db/migrate.ts",
+    "db:seed": "bun --env-file=../../.env src/db/seed.ts",
+    "db:studio": "bun --env-file=../../.env drizzle-kit studio"
+  },
+  "dependencies": {
+    "@elysiajs/cors": "^1.4.0",
+    "@elysiajs/openapi": "^1.4.0",
+    "@lh/shared": "workspace:*",
+    "drizzle-orm": "^0.45.2",
+    "elysia": "^1.4.0",
+    "pino": "^9.0.0",
+    "postgres": "^3.4.0",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.0",
+    "pino-pretty": "^13.0.0"
+  }
+}

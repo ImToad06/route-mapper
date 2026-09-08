@@ -1,0 +1,12 @@
+**/node_modules
+**/dist
+**/coverage
+.git
+.github
+.env
+.env.*
+!.env.example
+infra/osrm/data
+infra/backup/dumps
+docs
+*.md
