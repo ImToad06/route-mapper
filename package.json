@@ -1,0 +1,22 @@
+{
+  "name": "lh-rutas",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Sistema de gestión y asignación de rutas — L&H Distribuciones",
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev": "bun run --filter '*' dev",
+    "dev:api": "bun run --filter @lh/api dev",
+    "dev:web": "bun run --filter @lh/web dev",
+    "build": "bun run --filter '*' build",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "typecheck": "bun run --filter '*' typecheck",
+    "test": "bun run --filter '*' test",
+    "db:generate": "bun run --filter @lh/api db:generate",
+    "db:migrate": "bun run --filter @lh/api db:migrate",
+    "db:seed": "bun run --filter @lh/api db:seed",
+    "prepare": "lefthook install"
+  },
+  "engines": { "bun": ">=1.2" }
+}
