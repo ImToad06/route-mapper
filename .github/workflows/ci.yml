@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [dev, main]
+  push:
+    branches: [dev, main]
+
+jobs:
+  verificar:
+    name: Lint, tipos, pruebas y build
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: lh
+          POSTGRES_PASSWORD: lh
+          POSTGRES_DB: lh_rutas_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U lh" --health-interval 10s --health-timeout 5s --health-retries 5
+    env:
+      DATABASE_URL: postgres://lh:lh@localhost:5432/lh_rutas_test
+      JWT_SECRET: secreto-solo-para-ci-de-al-menos-32-caracteres
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - name: Biome
+        run: bun run lint
+      - name: Migraciones
+        run: bun run db:migrate
+      - name: Tipos
+        run: bun run typecheck
+      - name: Pruebas
+        run: bun run test
+      - name: Build
+        run: bun run build
+
+  docker:
+    name: Imágenes Docker
+    runs-on: ubuntu-latest
+    needs: verificar
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build api
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: false
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,mode=max,scope=api
+      - name: Build web
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          push: false
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web

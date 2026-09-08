@@ -1,0 +1,16 @@
+# Desarrollo. Uso: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+# Levanta solo la base de datos (y opcionalmente osrm/vroom con --profile mapas);
+# la API y la web se ejecutan en la máquina con `bun run dev` para tener recarga en caliente.
+services:
+  db:
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+
+  api:
+    profiles: ["completo"]
+
+  web:
+    profiles: ["completo"]
+
+  backup:
+    profiles: ["completo"]
