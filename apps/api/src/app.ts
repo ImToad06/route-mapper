@@ -4,7 +4,10 @@ import { Elysia } from 'elysia'
 import { z } from 'zod'
 import { env } from './config/env.ts'
 import { VERSION } from './lib/version.ts'
+import { authController } from './modules/auth/auth.controller.ts'
+import { bitacoraController } from './modules/bitacora/bitacora.controller.ts'
 import { saludController } from './modules/salud/salud.controller.ts'
+import { usuariosController } from './modules/usuarios/usuarios.controller.ts'
 import { manejadorErrores } from './plugins/errores.ts'
 import { registroPeticiones } from './plugins/registro.ts'
 
@@ -26,5 +29,8 @@ export const app = new Elysia({ prefix: '/api' })
   .use(manejadorErrores)
   .use(registroPeticiones)
   .use(saludController)
+  .use(authController)
+  .use(usuariosController)
+  .use(bitacoraController)
 
 export type App = typeof app

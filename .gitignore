@@ -12,3 +12,6 @@ infra/osrm/data/
 infra/backup/dumps/
 playwright-report/
 test-results/
+
+# Playwright
+e2e/.auth/

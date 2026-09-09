@@ -30,6 +30,9 @@ services:
       JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-15m}
       JWT_REFRESH_TTL_DAYS: ${JWT_REFRESH_TTL_DAYS:-7}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8080}
+      LOGIN_MAX_INTENTOS: ${LOGIN_MAX_INTENTOS:-10}
+      COOKIE_SEGURA: ${COOKIE_SEGURA:-auto}
+      CONFIAR_PROXY: 'true'
       OSRM_URL: http://osrm:5000
       VROOM_URL: http://vroom:3000
       NOMINATIM_URL: ${NOMINATIM_URL:-https://nominatim.openstreetmap.org}

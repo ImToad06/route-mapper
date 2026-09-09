@@ -8,6 +8,15 @@ const envSchema = z.object({
   JWT_ACCESS_TTL: z.string().default('15m'),
   JWT_REFRESH_TTL_DAYS: z.coerce.number().int().positive().default(7),
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
+  /** Intentos fallidos de ingreso permitidos por IP cada 15 minutos (RNF-04). */
+  LOGIN_MAX_INTENTOS: z.coerce.number().int().positive().default(10),
+  /** `auto`: la cookie es Secure solo si la petición llegó por HTTPS (X-Forwarded-Proto o URL). */
+  COOKIE_SEGURA: z.enum(['auto', 'true', 'false']).default('auto'),
+  /** true cuando la API está detrás de Nginx: se toma la IP real del último salto de X-Forwarded-For. */
+  CONFIAR_PROXY: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
   OSRM_URL: z.url().optional(),
   VROOM_URL: z.url().optional(),

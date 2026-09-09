@@ -10,43 +10,145 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as SaludRouteImport } from './routes/salud'
+import { Route as CambiarContrasenaRouteImport } from './routes/cambiar-contrasena'
+import { Route as ConductorRouteImport } from './routes/conductor'
+import { Route as IngresarRouteImport } from './routes/ingresar'
+import { Route as PanelRouteImport } from './routes/panel'
+import { Route as ConductorIndexRouteImport } from './routes/conductor/index'
+import { Route as ConductorCuentaRouteImport } from './routes/conductor/cuenta'
+import { Route as PanelIndexRouteImport } from './routes/panel/index'
+import { Route as PanelCuentaRouteImport } from './routes/panel/cuenta'
+import { Route as PanelUsuariosRouteImport } from './routes/panel/usuarios'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SaludRoute = SaludRouteImport.update({
-  id: '/salud',
-  path: '/salud',
+const CambiarContrasenaRoute = CambiarContrasenaRouteImport.update({
+  id: '/cambiar-contrasena',
+  path: '/cambiar-contrasena',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ConductorRoute = ConductorRouteImport.update({
+  id: '/conductor',
+  path: '/conductor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IngresarRoute = IngresarRouteImport.update({
+  id: '/ingresar',
+  path: '/ingresar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PanelRoute = PanelRouteImport.update({
+  id: '/panel',
+  path: '/panel',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConductorIndexRoute = ConductorIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ConductorRoute,
+} as any)
+const ConductorCuentaRoute = ConductorCuentaRouteImport.update({
+  id: '/cuenta',
+  path: '/cuenta',
+  getParentRoute: () => ConductorRoute,
+} as any)
+const PanelIndexRoute = PanelIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PanelRoute,
+} as any)
+const PanelCuentaRoute = PanelCuentaRouteImport.update({
+  id: '/cuenta',
+  path: '/cuenta',
+  getParentRoute: () => PanelRoute,
+} as any)
+const PanelUsuariosRoute = PanelUsuariosRouteImport.update({
+  id: '/usuarios',
+  path: '/usuarios',
+  getParentRoute: () => PanelRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/salud': typeof SaludRoute
+  '/cambiar-contrasena': typeof CambiarContrasenaRoute
+  '/conductor': typeof ConductorRouteWithChildren
+  '/ingresar': typeof IngresarRoute
+  '/panel': typeof PanelRouteWithChildren
+  '/conductor/cuenta': typeof ConductorCuentaRoute
+  '/panel/cuenta': typeof PanelCuentaRoute
+  '/panel/usuarios': typeof PanelUsuariosRoute
+  '/conductor/': typeof ConductorIndexRoute
+  '/panel/': typeof PanelIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/salud': typeof SaludRoute
+  '/cambiar-contrasena': typeof CambiarContrasenaRoute
+  '/ingresar': typeof IngresarRoute
+  '/conductor/cuenta': typeof ConductorCuentaRoute
+  '/panel/cuenta': typeof PanelCuentaRoute
+  '/panel/usuarios': typeof PanelUsuariosRoute
+  '/conductor': typeof ConductorIndexRoute
+  '/panel': typeof PanelIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/salud': typeof SaludRoute
+  '/cambiar-contrasena': typeof CambiarContrasenaRoute
+  '/conductor': typeof ConductorRouteWithChildren
+  '/ingresar': typeof IngresarRoute
+  '/panel': typeof PanelRouteWithChildren
+  '/conductor/cuenta': typeof ConductorCuentaRoute
+  '/panel/cuenta': typeof PanelCuentaRoute
+  '/panel/usuarios': typeof PanelUsuariosRoute
+  '/conductor/': typeof ConductorIndexRoute
+  '/panel/': typeof PanelIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/salud'
+  fullPaths:
+    | '/'
+    | '/cambiar-contrasena'
+    | '/conductor'
+    | '/ingresar'
+    | '/panel'
+    | '/conductor/cuenta'
+    | '/panel/cuenta'
+    | '/panel/usuarios'
+    | '/conductor/'
+    | '/panel/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/salud'
-  id: '__root__' | '/' | '/salud'
+  to:
+    | '/'
+    | '/cambiar-contrasena'
+    | '/ingresar'
+    | '/conductor/cuenta'
+    | '/panel/cuenta'
+    | '/panel/usuarios'
+    | '/conductor'
+    | '/panel'
+  id:
+    | '__root__'
+    | '/'
+    | '/cambiar-contrasena'
+    | '/conductor'
+    | '/ingresar'
+    | '/panel'
+    | '/conductor/cuenta'
+    | '/panel/cuenta'
+    | '/panel/usuarios'
+    | '/conductor/'
+    | '/panel/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  SaludRoute: typeof SaludRoute
+  CambiarContrasenaRoute: typeof CambiarContrasenaRoute
+  ConductorRoute: typeof ConductorRouteWithChildren
+  IngresarRoute: typeof IngresarRoute
+  PanelRoute: typeof PanelRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -58,19 +160,106 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/salud': {
-      id: '/salud'
-      path: '/salud'
-      fullPath: '/salud'
-      preLoaderRoute: typeof SaludRouteImport
+    '/cambiar-contrasena': {
+      id: '/cambiar-contrasena'
+      path: '/cambiar-contrasena'
+      fullPath: '/cambiar-contrasena'
+      preLoaderRoute: typeof CambiarContrasenaRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/conductor': {
+      id: '/conductor'
+      path: '/conductor'
+      fullPath: '/conductor'
+      preLoaderRoute: typeof ConductorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ingresar': {
+      id: '/ingresar'
+      path: '/ingresar'
+      fullPath: '/ingresar'
+      preLoaderRoute: typeof IngresarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/panel': {
+      id: '/panel'
+      path: '/panel'
+      fullPath: '/panel'
+      preLoaderRoute: typeof PanelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conductor/': {
+      id: '/conductor/'
+      path: '/'
+      fullPath: '/conductor/'
+      preLoaderRoute: typeof ConductorIndexRouteImport
+      parentRoute: typeof ConductorRoute
+    }
+    '/conductor/cuenta': {
+      id: '/conductor/cuenta'
+      path: '/cuenta'
+      fullPath: '/conductor/cuenta'
+      preLoaderRoute: typeof ConductorCuentaRouteImport
+      parentRoute: typeof ConductorRoute
+    }
+    '/panel/': {
+      id: '/panel/'
+      path: '/'
+      fullPath: '/panel/'
+      preLoaderRoute: typeof PanelIndexRouteImport
+      parentRoute: typeof PanelRoute
+    }
+    '/panel/cuenta': {
+      id: '/panel/cuenta'
+      path: '/cuenta'
+      fullPath: '/panel/cuenta'
+      preLoaderRoute: typeof PanelCuentaRouteImport
+      parentRoute: typeof PanelRoute
+    }
+    '/panel/usuarios': {
+      id: '/panel/usuarios'
+      path: '/usuarios'
+      fullPath: '/panel/usuarios'
+      preLoaderRoute: typeof PanelUsuariosRouteImport
+      parentRoute: typeof PanelRoute
     }
   }
 }
 
+interface ConductorRouteChildren {
+  ConductorCuentaRoute: typeof ConductorCuentaRoute
+  ConductorIndexRoute: typeof ConductorIndexRoute
+}
+
+const ConductorRouteChildren: ConductorRouteChildren = {
+  ConductorCuentaRoute: ConductorCuentaRoute,
+  ConductorIndexRoute: ConductorIndexRoute,
+}
+
+const ConductorRouteWithChildren = ConductorRoute._addFileChildren(
+  ConductorRouteChildren,
+)
+
+interface PanelRouteChildren {
+  PanelCuentaRoute: typeof PanelCuentaRoute
+  PanelUsuariosRoute: typeof PanelUsuariosRoute
+  PanelIndexRoute: typeof PanelIndexRoute
+}
+
+const PanelRouteChildren: PanelRouteChildren = {
+  PanelCuentaRoute: PanelCuentaRoute,
+  PanelUsuariosRoute: PanelUsuariosRoute,
+  PanelIndexRoute: PanelIndexRoute,
+}
+
+const PanelRouteWithChildren = PanelRoute._addFileChildren(PanelRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  SaludRoute: SaludRoute,
+  CambiarContrasenaRoute: CambiarContrasenaRoute,
+  ConductorRoute: ConductorRouteWithChildren,
+  IngresarRoute: IngresarRoute,
+  PanelRoute: PanelRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
