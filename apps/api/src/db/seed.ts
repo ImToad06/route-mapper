@@ -101,6 +101,7 @@ if ((conteoDestinos?.total ?? 0) === 0) {
       horarioAtencion: '08:00-18:00',
       latitud: 11.0198,
       longitud: -74.8266,
+      ubicacionVerificada: true,
     },
     {
       zonaId: zonaId('Norte'),
@@ -109,6 +110,7 @@ if ((conteoDestinos?.total ?? 0) === 0) {
       horarioAtencion: '07:00-19:00',
       latitud: 11.0072,
       longitud: -74.8106,
+      ubicacionVerificada: true,
     },
     {
       zonaId: zonaId('Norte'),
@@ -117,6 +119,7 @@ if ((conteoDestinos?.total ?? 0) === 0) {
       horarioAtencion: '08:00-20:00',
       latitud: 11.0145,
       longitud: -74.8215,
+      ubicacionVerificada: true,
     },
     {
       zonaId: zonaId('Centro'),
@@ -125,6 +128,7 @@ if ((conteoDestinos?.total ?? 0) === 0) {
       horarioAtencion: '08:00-17:00',
       latitud: 10.9986,
       longitud: -74.7983,
+      ubicacionVerificada: true,
     },
     {
       zonaId: zonaId('Centro'),
@@ -133,6 +137,7 @@ if ((conteoDestinos?.total ?? 0) === 0) {
       horarioAtencion: '06:30-18:00',
       latitud: 10.9931,
       longitud: -74.7897,
+      ubicacionVerificada: true,
     },
     {
       zonaId: zonaId('Centro'),
@@ -141,6 +146,7 @@ if ((conteoDestinos?.total ?? 0) === 0) {
       horarioAtencion: '07:00-16:00',
       latitud: 10.9838,
       longitud: -74.7822,
+      ubicacionVerificada: true,
     },
     {
       zonaId: zonaId('Sur'),
@@ -149,6 +155,7 @@ if ((conteoDestinos?.total ?? 0) === 0) {
       horarioAtencion: '07:00-19:00',
       latitud: 10.9635,
       longitud: -74.7935,
+      ubicacionVerificada: true,
     },
     {
       zonaId: zonaId('Sur'),
@@ -157,6 +164,7 @@ if ((conteoDestinos?.total ?? 0) === 0) {
       horarioAtencion: '06:00-18:00',
       latitud: 10.9702,
       longitud: -74.7961,
+      ubicacionVerificada: true,
     },
     {
       zonaId: zonaId('Suroccidente'),
@@ -165,6 +173,7 @@ if ((conteoDestinos?.total ?? 0) === 0) {
       horarioAtencion: '07:00-19:00',
       latitud: 10.9712,
       longitud: -74.8265,
+      ubicacionVerificada: true,
     },
     {
       zonaId: zonaId('Área metropolitana'),
@@ -173,6 +182,7 @@ if ((conteoDestinos?.total ?? 0) === 0) {
       horarioAtencion: '07:00-17:00',
       latitud: 10.9178,
       longitud: -74.7692,
+      ubicacionVerificada: true,
     },
   ])
 }

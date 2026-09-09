@@ -17,8 +17,14 @@ import { Route as PanelRouteImport } from './routes/panel'
 import { Route as ConductorIndexRouteImport } from './routes/conductor/index'
 import { Route as ConductorCuentaRouteImport } from './routes/conductor/cuenta'
 import { Route as PanelIndexRouteImport } from './routes/panel/index'
+import { Route as PanelConductoresRouteImport } from './routes/panel/conductores'
 import { Route as PanelCuentaRouteImport } from './routes/panel/cuenta'
+import { Route as PanelDestinosRouteImport } from './routes/panel/destinos'
+import { Route as PanelProductosRouteImport } from './routes/panel/productos'
 import { Route as PanelUsuariosRouteImport } from './routes/panel/usuarios'
+import { Route as PanelVehiculosRouteImport } from './routes/panel/vehiculos'
+import { Route as PanelZonasRouteImport } from './routes/panel/zonas'
+import { Route as PanelDestinosImportarRouteImport } from './routes/panel/destinos_.importar'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -60,14 +66,44 @@ const PanelIndexRoute = PanelIndexRouteImport.update({
   path: '/',
   getParentRoute: () => PanelRoute,
 } as any)
+const PanelConductoresRoute = PanelConductoresRouteImport.update({
+  id: '/conductores',
+  path: '/conductores',
+  getParentRoute: () => PanelRoute,
+} as any)
 const PanelCuentaRoute = PanelCuentaRouteImport.update({
   id: '/cuenta',
   path: '/cuenta',
   getParentRoute: () => PanelRoute,
 } as any)
+const PanelDestinosRoute = PanelDestinosRouteImport.update({
+  id: '/destinos',
+  path: '/destinos',
+  getParentRoute: () => PanelRoute,
+} as any)
+const PanelProductosRoute = PanelProductosRouteImport.update({
+  id: '/productos',
+  path: '/productos',
+  getParentRoute: () => PanelRoute,
+} as any)
 const PanelUsuariosRoute = PanelUsuariosRouteImport.update({
   id: '/usuarios',
   path: '/usuarios',
+  getParentRoute: () => PanelRoute,
+} as any)
+const PanelVehiculosRoute = PanelVehiculosRouteImport.update({
+  id: '/vehiculos',
+  path: '/vehiculos',
+  getParentRoute: () => PanelRoute,
+} as any)
+const PanelZonasRoute = PanelZonasRouteImport.update({
+  id: '/zonas',
+  path: '/zonas',
+  getParentRoute: () => PanelRoute,
+} as any)
+const PanelDestinosImportarRoute = PanelDestinosImportarRouteImport.update({
+  id: '/destinos_/importar',
+  path: '/destinos/importar',
   getParentRoute: () => PanelRoute,
 } as any)
 
@@ -78,20 +114,32 @@ export interface FileRoutesByFullPath {
   '/ingresar': typeof IngresarRoute
   '/panel': typeof PanelRouteWithChildren
   '/conductor/cuenta': typeof ConductorCuentaRoute
+  '/panel/conductores': typeof PanelConductoresRoute
   '/panel/cuenta': typeof PanelCuentaRoute
+  '/panel/destinos': typeof PanelDestinosRoute
+  '/panel/productos': typeof PanelProductosRoute
   '/panel/usuarios': typeof PanelUsuariosRoute
+  '/panel/vehiculos': typeof PanelVehiculosRoute
+  '/panel/zonas': typeof PanelZonasRoute
   '/conductor/': typeof ConductorIndexRoute
   '/panel/': typeof PanelIndexRoute
+  '/panel/destinos/importar': typeof PanelDestinosImportarRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cambiar-contrasena': typeof CambiarContrasenaRoute
   '/ingresar': typeof IngresarRoute
   '/conductor/cuenta': typeof ConductorCuentaRoute
+  '/panel/conductores': typeof PanelConductoresRoute
   '/panel/cuenta': typeof PanelCuentaRoute
+  '/panel/destinos': typeof PanelDestinosRoute
+  '/panel/productos': typeof PanelProductosRoute
   '/panel/usuarios': typeof PanelUsuariosRoute
+  '/panel/vehiculos': typeof PanelVehiculosRoute
+  '/panel/zonas': typeof PanelZonasRoute
   '/conductor': typeof ConductorIndexRoute
   '/panel': typeof PanelIndexRoute
+  '/panel/destinos/importar': typeof PanelDestinosImportarRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -101,10 +149,16 @@ export interface FileRoutesById {
   '/ingresar': typeof IngresarRoute
   '/panel': typeof PanelRouteWithChildren
   '/conductor/cuenta': typeof ConductorCuentaRoute
+  '/panel/conductores': typeof PanelConductoresRoute
   '/panel/cuenta': typeof PanelCuentaRoute
+  '/panel/destinos': typeof PanelDestinosRoute
+  '/panel/productos': typeof PanelProductosRoute
   '/panel/usuarios': typeof PanelUsuariosRoute
+  '/panel/vehiculos': typeof PanelVehiculosRoute
+  '/panel/zonas': typeof PanelZonasRoute
   '/conductor/': typeof ConductorIndexRoute
   '/panel/': typeof PanelIndexRoute
+  '/panel/destinos_/importar': typeof PanelDestinosImportarRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -115,20 +169,32 @@ export interface FileRouteTypes {
     | '/ingresar'
     | '/panel'
     | '/conductor/cuenta'
+    | '/panel/conductores'
     | '/panel/cuenta'
+    | '/panel/destinos'
+    | '/panel/productos'
     | '/panel/usuarios'
+    | '/panel/vehiculos'
+    | '/panel/zonas'
     | '/conductor/'
     | '/panel/'
+    | '/panel/destinos/importar'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/cambiar-contrasena'
     | '/ingresar'
     | '/conductor/cuenta'
+    | '/panel/conductores'
     | '/panel/cuenta'
+    | '/panel/destinos'
+    | '/panel/productos'
     | '/panel/usuarios'
+    | '/panel/vehiculos'
+    | '/panel/zonas'
     | '/conductor'
     | '/panel'
+    | '/panel/destinos/importar'
   id:
     | '__root__'
     | '/'
@@ -137,10 +203,16 @@ export interface FileRouteTypes {
     | '/ingresar'
     | '/panel'
     | '/conductor/cuenta'
+    | '/panel/conductores'
     | '/panel/cuenta'
+    | '/panel/destinos'
+    | '/panel/productos'
     | '/panel/usuarios'
+    | '/panel/vehiculos'
+    | '/panel/zonas'
     | '/conductor/'
     | '/panel/'
+    | '/panel/destinos_/importar'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -209,6 +281,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PanelIndexRouteImport
       parentRoute: typeof PanelRoute
     }
+    '/panel/conductores': {
+      id: '/panel/conductores'
+      path: '/conductores'
+      fullPath: '/panel/conductores'
+      preLoaderRoute: typeof PanelConductoresRouteImport
+      parentRoute: typeof PanelRoute
+    }
     '/panel/cuenta': {
       id: '/panel/cuenta'
       path: '/cuenta'
@@ -216,11 +295,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PanelCuentaRouteImport
       parentRoute: typeof PanelRoute
     }
+    '/panel/destinos': {
+      id: '/panel/destinos'
+      path: '/destinos'
+      fullPath: '/panel/destinos'
+      preLoaderRoute: typeof PanelDestinosRouteImport
+      parentRoute: typeof PanelRoute
+    }
+    '/panel/productos': {
+      id: '/panel/productos'
+      path: '/productos'
+      fullPath: '/panel/productos'
+      preLoaderRoute: typeof PanelProductosRouteImport
+      parentRoute: typeof PanelRoute
+    }
     '/panel/usuarios': {
       id: '/panel/usuarios'
       path: '/usuarios'
       fullPath: '/panel/usuarios'
       preLoaderRoute: typeof PanelUsuariosRouteImport
+      parentRoute: typeof PanelRoute
+    }
+    '/panel/vehiculos': {
+      id: '/panel/vehiculos'
+      path: '/vehiculos'
+      fullPath: '/panel/vehiculos'
+      preLoaderRoute: typeof PanelVehiculosRouteImport
+      parentRoute: typeof PanelRoute
+    }
+    '/panel/zonas': {
+      id: '/panel/zonas'
+      path: '/zonas'
+      fullPath: '/panel/zonas'
+      preLoaderRoute: typeof PanelZonasRouteImport
+      parentRoute: typeof PanelRoute
+    }
+    '/panel/destinos_/importar': {
+      id: '/panel/destinos_/importar'
+      path: '/destinos/importar'
+      fullPath: '/panel/destinos/importar'
+      preLoaderRoute: typeof PanelDestinosImportarRouteImport
       parentRoute: typeof PanelRoute
     }
   }
@@ -241,15 +355,27 @@ const ConductorRouteWithChildren = ConductorRoute._addFileChildren(
 )
 
 interface PanelRouteChildren {
+  PanelConductoresRoute: typeof PanelConductoresRoute
   PanelCuentaRoute: typeof PanelCuentaRoute
+  PanelDestinosRoute: typeof PanelDestinosRoute
+  PanelProductosRoute: typeof PanelProductosRoute
   PanelUsuariosRoute: typeof PanelUsuariosRoute
+  PanelVehiculosRoute: typeof PanelVehiculosRoute
+  PanelZonasRoute: typeof PanelZonasRoute
   PanelIndexRoute: typeof PanelIndexRoute
+  PanelDestinosImportarRoute: typeof PanelDestinosImportarRoute
 }
 
 const PanelRouteChildren: PanelRouteChildren = {
+  PanelConductoresRoute: PanelConductoresRoute,
   PanelCuentaRoute: PanelCuentaRoute,
+  PanelDestinosRoute: PanelDestinosRoute,
+  PanelProductosRoute: PanelProductosRoute,
   PanelUsuariosRoute: PanelUsuariosRoute,
+  PanelVehiculosRoute: PanelVehiculosRoute,
+  PanelZonasRoute: PanelZonasRoute,
   PanelIndexRoute: PanelIndexRoute,
+  PanelDestinosImportarRoute: PanelDestinosImportarRoute,
 }
 
 const PanelRouteWithChildren = PanelRoute._addFileChildren(PanelRouteChildren)

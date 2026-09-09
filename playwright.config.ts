@@ -17,7 +17,20 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   projects: [
-    { name: 'escritorio', use: { ...devices['Desktop Chrome'] } },
+    {
+      name: 'escritorio',
+      use: {
+        ...devices['Desktop Chrome'],
+        // WebGL por software para que MapLibre dibuje las teselas en el navegador sin GPU.
+        launchOptions: {
+          args: [
+            '--use-angle=swiftshader',
+            '--enable-unsafe-swiftshader',
+            '--ignore-gpu-blocklist',
+          ],
+        },
+      },
+    },
     { name: 'movil', use: { ...devices['Pixel 7'] }, testMatch: /movil\.spec\.ts/ },
   ],
   webServer: [

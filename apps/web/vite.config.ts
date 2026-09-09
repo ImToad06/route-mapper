@@ -16,6 +16,12 @@ export default defineConfig({
       '/api': { target: process.env.VITE_PROXY_API ?? 'http://localhost:3000', changeOrigin: true },
     },
   },
+  preview: {
+    port: 4173,
+    proxy: {
+      '/api': { target: process.env.VITE_PROXY_API ?? 'http://localhost:3000', changeOrigin: true },
+    },
+  },
   test: {
     environment: 'jsdom',
     globals: true,
