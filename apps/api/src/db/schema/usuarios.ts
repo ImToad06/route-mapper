@@ -1,5 +1,15 @@
 import { relations } from 'drizzle-orm'
-import { boolean, integer, pgTable, serial, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
+import {
+  boolean,
+  index,
+  integer,
+  pgTable,
+  serial,
+  timestamp,
+  uniqueIndex,
+  uuid,
+  varchar,
+} from 'drizzle-orm/pg-core'
 import { rolEnum } from './enums.ts'
 
 /** Roles (RF-02). Catálogo fijo poblado por el seed. */
@@ -24,18 +34,25 @@ export const usuario = pgTable('usuario', {
 })
 
 /** Sesiones con refresh token rotativo (RF-03, RNF-03). */
-export const sesion = pgTable('sesion', {
-  id: uuid().primaryKey().defaultRandom(),
-  usuarioId: integer()
-    .notNull()
-    .references(() => usuario.id, { onDelete: 'cascade' }),
-  refreshTokenHash: varchar({ length: 255 }).notNull(),
-  userAgent: varchar({ length: 255 }),
-  ip: varchar({ length: 64 }),
-  expiraEn: timestamp({ withTimezone: true }).notNull(),
-  revocadaEn: timestamp({ withTimezone: true }),
-  creadoEn: timestamp({ withTimezone: true }).notNull().defaultNow(),
-})
+export const sesion = pgTable(
+  'sesion',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    usuarioId: integer()
+      .notNull()
+      .references(() => usuario.id, { onDelete: 'cascade' }),
+    refreshTokenHash: varchar({ length: 255 }).notNull(),
+    userAgent: varchar({ length: 255 }),
+    ip: varchar({ length: 64 }),
+    expiraEn: timestamp({ withTimezone: true }).notNull(),
+    revocadaEn: timestamp({ withTimezone: true }),
+    creadoEn: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('sesion_refresh_token_hash_idx').on(t.refreshTokenHash),
+    index('sesion_usuario_id_idx').on(t.usuarioId),
+  ],
+)
 
 /** Registro de accesos e intentos de acceso (RNF-04). */
 export const intentoAcceso = pgTable('intento_acceso', {

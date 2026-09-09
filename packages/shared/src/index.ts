@@ -1,3 +1,5 @@
 export * from './enums.ts'
 export * from './schemas/auth.ts'
+export * from './schemas/bitacora.ts'
 export * from './schemas/comunes.ts'
+export * from './schemas/usuarios.ts'

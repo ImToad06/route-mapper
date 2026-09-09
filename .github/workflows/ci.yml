@@ -40,6 +40,21 @@ jobs:
         run: bun run test
       - name: Build
         run: bun run build
+      - name: Navegador para Playwright
+        run: bunx playwright install --with-deps chromium
+      - name: Pruebas de extremo a extremo
+        run: bun run test:e2e
+        env:
+          CI: 'true'
+          API_PORT: '3000'
+          CORS_ORIGIN: http://localhost:5173
+      - name: Informe de Playwright
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7
 
   docker:
     name: Imágenes Docker

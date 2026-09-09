@@ -32,6 +32,19 @@ bun run dev                     # API en :3000, web en :5173
 - Web: http://localhost:5173
 - API: http://localhost:3000/api/salud · Documentación: http://localhost:3000/api/docs
 
+Al ingresar por primera vez con la contraseña temporal del seed, el sistema exige crear una nueva.
+
+## Autenticación (Fase 1)
+
+- Token de acceso JWT (15 min) enviado en `Authorization: Bearer` y guardado solo en memoria en el navegador.
+- Token de refresco opaco y rotativo en cookie `httpOnly` (`lh_refresco`, ruta `/api/auth`, 7 días). Reusar un
+  token ya rotado invalida todas las sesiones del usuario.
+- Contraseñas con argon2id (`Bun.password`). Máximo 10 intentos de ingreso por IP cada 15 minutos.
+- Roles: `administrador` (incluye todo lo de `coordinador`), `coordinador`, `conductor`. Guards con
+  `{ auth: true }` o `{ roles: [...] }` en cada ruta de la API.
+- El administrador crea usuarios y restablece contraseñas; el sistema genera una contraseña temporal que se
+  muestra una sola vez. Toda operación queda en la `bitacora` (`GET /api/bitacora`, solo administrador).
+
 ## Comandos
 
 | Comando | Qué hace |
@@ -39,6 +52,7 @@ bun run dev                     # API en :3000, web en :5173
 | `bun run lint` / `lint:fix` | Biome (formato + lint) |
 | `bun run typecheck` | `tsc --noEmit` en todos los paquetes |
 | `bun run test` | `bun test` (api, shared) y Vitest (web) |
+| `bun run test:e2e` | Playwright (requiere `bunx playwright install chromium` la primera vez) |
 | `bun run build` | Build de producción de api y web |
 | `bun run db:generate` | Genera una migración a partir del esquema Drizzle |
 | `bun run db:migrate` | Aplica migraciones pendientes |
