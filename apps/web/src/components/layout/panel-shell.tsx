@@ -1,5 +1,14 @@
 import { Link, Outlet } from '@tanstack/react-router'
-import { LayoutDashboard, Menu, Truck, Users } from 'lucide-react'
+import {
+  Boxes,
+  IdCard,
+  LayoutDashboard,
+  Map as MapIcon,
+  MapPinned,
+  Menu,
+  Truck,
+  Users,
+} from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
@@ -8,7 +17,14 @@ import { useAuth } from '@/lib/auth-store'
 import { MenuUsuario } from './menu-usuario'
 
 interface Enlace {
-  to: '/panel' | '/panel/usuarios'
+  to:
+    | '/panel'
+    | '/panel/usuarios'
+    | '/panel/vehiculos'
+    | '/panel/conductores'
+    | '/panel/productos'
+    | '/panel/zonas'
+    | '/panel/destinos'
   etiqueta: string
   icono: ReactNode
   soloAdmin?: boolean
@@ -19,6 +35,32 @@ const enlaces: Enlace[] = [
     to: '/panel',
     etiqueta: 'Inicio',
     icono: <LayoutDashboard className="size-4" aria-hidden="true" />,
+  },
+  {
+    to: '/panel/destinos',
+    etiqueta: 'Destinos',
+    icono: <MapPinned className="size-4" aria-hidden="true" />,
+  },
+  {
+    to: '/panel/zonas',
+    etiqueta: 'Zonas',
+    icono: <MapIcon className="size-4" aria-hidden="true" />,
+  },
+  {
+    to: '/panel/productos',
+    etiqueta: 'Productos',
+    icono: <Boxes className="size-4" aria-hidden="true" />,
+  },
+  {
+    to: '/panel/conductores',
+    etiqueta: 'Conductores',
+    icono: <IdCard className="size-4" aria-hidden="true" />,
+  },
+  {
+    to: '/panel/vehiculos',
+    etiqueta: 'Vehículos',
+    icono: <Truck className="size-4" aria-hidden="true" />,
+    soloAdmin: true,
   },
   {
     to: '/panel/usuarios',

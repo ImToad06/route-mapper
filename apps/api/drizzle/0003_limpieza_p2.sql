@@ -1,0 +1,1 @@
+ALTER TABLE "destino" DROP COLUMN "geocodificado_manual";

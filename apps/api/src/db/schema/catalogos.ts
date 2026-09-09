@@ -4,6 +4,7 @@ import {
   check,
   doublePrecision,
   integer,
+  jsonb,
   numeric,
   pgTable,
   serial,
@@ -64,8 +65,21 @@ export const destino = pgTable('destino', {
   telefono: varchar({ length: 30 }),
   latitud: doublePrecision().notNull(),
   longitud: doublePrecision().notNull(),
-  geocodificadoManual: boolean().notNull().default(false),
+  /** true cuando el coordinador confirmó o movió el marcador; false si vino de geocodificación automática. */
+  ubicacionVerificada: boolean().notNull().default(false),
   activo: boolean().notNull().default(true),
+  creadoEn: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  actualizadoEn: timestamp({ withTimezone: true })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+})
+
+/** Caché de geocodificación para no repetir consultas a Nominatim (política de uso: 1 req/s). */
+export const geocodificacionCache = pgTable('geocodificacion_cache', {
+  id: serial().primaryKey(),
+  consulta: varchar({ length: 300 }).notNull().unique(),
+  resultados: jsonb().$type<{ etiqueta: string; latitud: number; longitud: number }[]>().notNull(),
   creadoEn: timestamp({ withTimezone: true }).notNull().defaultNow(),
 })
 

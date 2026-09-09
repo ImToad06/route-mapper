@@ -58,6 +58,22 @@ Al ingresar por primera vez con la contraseña temporal del seed, el sistema exi
 | `bun run db:migrate` | Aplica migraciones pendientes |
 | `bun run db:seed` | Datos iniciales (idempotente) |
 
+## Catálogos y mapa (Fase 2)
+
+- Módulos `vehiculos`, `conductores`, `productos`, `zonas` y `destinos` con la misma forma
+  (controller → service → Drizzle) y filtros comunes: `buscar`, `pagina`, `porPagina`, `activo`.
+- Vehículos y conductores los administra el rol `administrador`; productos, zonas y destinos también el `coordinador`.
+- Crear un conductor crea su usuario con rol `conductor` y una contraseña temporal.
+- Mapa: MapLibre GL con teselas vectoriales de [OpenFreeMap](https://openfreemap.org) (sin clave).
+- Geocodificación: `GET /api/geocodificar?direccion=…` consulta Nominatim (1 req/s, `NOMINATIM_USER_AGENT`)
+  con caché en `geocodificacion_cache`. Las direcciones de Barranquilla se resuelven mal con frecuencia,
+  por eso el formulario de destino exige confirmar o arrastrar el marcador (`ubicacion_verificada`).
+- Importación de destinos: `POST /api/destinos/importar` (máx. 100 filas, todas con coordenadas). Columnas CSV
+  aceptadas: `cliente`, `direccion`, `zona` (obligatorias), `horario`, `telefono`, `latitud`, `longitud`.
+  El navegador geocodifica una a una las filas sin coordenadas antes de enviarlas (con progreso) y esas
+  quedan "por verificar" hasta que el coordinador confirme el marcador.
+- Las violaciones de unicidad de PostgreSQL (23505) se traducen a 409 con mensaje en español en `plugins/errores.ts`.
+
 ## Producción
 
 ```bash

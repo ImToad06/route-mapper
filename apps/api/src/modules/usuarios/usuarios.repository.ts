@@ -109,10 +109,7 @@ export async function actualizar(
     debeCambiarContrasena: boolean
   }>,
 ): Promise<void> {
-  await db
-    .update(usuario)
-    .set({ ...datos, actualizadoEn: new Date() })
-    .where(eq(usuario.id, id))
+  await db.update(usuario).set(datos).where(eq(usuario.id, id))
 }
 
 export async function revocarSesiones(usuarioId: number, exceptoSesionId?: string): Promise<void> {

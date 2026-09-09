@@ -15,6 +15,20 @@
       "when": 1788970581752,
       "tag": "0001_sesion_indices",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788982704423,
+      "tag": "0002_catalogos_p2",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788987146448,
+      "tag": "0003_limpieza_p2",
+      "breakpoints": true
     }
   ]
 }

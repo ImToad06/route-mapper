@@ -48,7 +48,10 @@ export const ruta = pgTable(
     finalizadaEn: timestamp({ withTimezone: true }),
     motivoRechazo: varchar({ length: 255 }),
     creadoEn: timestamp({ withTimezone: true }).notNull().defaultNow(),
-    actualizadoEn: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    actualizadoEn: timestamp({ withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
   },
   (t) => [
     // RF-16: un conductor no puede tener dos rutas activas el mismo día.

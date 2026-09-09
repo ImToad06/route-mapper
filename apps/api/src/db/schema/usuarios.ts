@@ -30,7 +30,10 @@ export const usuario = pgTable('usuario', {
   debeCambiarContrasena: boolean().notNull().default(false),
   activo: boolean().notNull().default(true),
   creadoEn: timestamp({ withTimezone: true }).notNull().defaultNow(),
-  actualizadoEn: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  actualizadoEn: timestamp({ withTimezone: true })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
 })
 
 /** Sesiones con refresh token rotativo (RF-03, RNF-03). */
