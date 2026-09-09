@@ -7,9 +7,11 @@ import { VERSION } from './lib/version.ts'
 import { authController } from './modules/auth/auth.controller.ts'
 import { bitacoraController } from './modules/bitacora/bitacora.controller.ts'
 import { conductoresController } from './modules/conductores/conductores.controller.ts'
+import { configuracionController } from './modules/configuracion/configuracion.controller.ts'
 import { destinosController } from './modules/destinos/destinos.controller.ts'
 import { geocodificacionController } from './modules/geocodificacion/geocodificacion.controller.ts'
 import { productosController } from './modules/productos/productos.controller.ts'
+import { rutasController } from './modules/rutas/rutas.controller.ts'
 import { saludController } from './modules/salud/salud.controller.ts'
 import { usuariosController } from './modules/usuarios/usuarios.controller.ts'
 import { vehiculosController } from './modules/vehiculos/vehiculos.controller.ts'
@@ -44,5 +46,7 @@ export const app = new Elysia({ prefix: '/api' })
   .use(zonasController)
   .use(destinosController)
   .use(geocodificacionController)
+  .use(configuracionController)
+  .use(rutasController)
 
 export type App = typeof app

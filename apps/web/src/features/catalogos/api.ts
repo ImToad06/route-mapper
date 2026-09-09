@@ -11,14 +11,7 @@ import type {
   ZonaInput,
 } from '@lh/shared'
 import { queryOptions } from '@tanstack/react-query'
-import { api } from '@/lib/api'
-
-/** Convierte el resultado de Eden en datos o lanza el error con mensaje de la API. */
-async function datosDe<T>(p: Promise<{ data: T | null; error: unknown }>): Promise<T> {
-  const { data, error } = await p
-  if (error || data === null) throw error ?? new Error('Sin respuesta del servidor')
-  return data
-}
+import { api, datosDe } from '@/lib/api'
 
 export const claves = {
   vehiculos: ['vehiculos'] as const,
@@ -55,6 +48,12 @@ export const productosQuery = (f: ListarCatalogoInput) =>
     queryKey: [...claves.productos, f],
     queryFn: () => datosDe(api.productos.get({ query: f })),
   })
+/** Todos los productos activos (sin paginar), para el constructor de rutas. */
+export const productosActivosQuery = queryOptions({
+  queryKey: [...claves.productos, 'activos'],
+  queryFn: () => datosDe(api.productos.activos.get()),
+  staleTime: 60_000,
+})
 export const crearProducto = (d: ProductoInput) => api.productos.post(d)
 export const actualizarProducto = (id: number, d: Partial<ProductoInput>) =>
   api.productos({ id }).patch(d)

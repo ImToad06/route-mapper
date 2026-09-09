@@ -33,6 +33,16 @@ export async function listarProductos(f: ListarCatalogoInput) {
   return construirPagina(filas.map(aPublico), total?.total ?? 0, f.pagina, f.porPagina)
 }
 
+/** Todos los productos activos, sin paginar, para selectores del constructor de rutas. */
+export async function listarProductosActivos() {
+  const filas = await db
+    .select()
+    .from(producto)
+    .where(eq(producto.activo, true))
+    .orderBy(producto.codigo)
+  return filas.map(aPublico)
+}
+
 export async function obtenerProducto(id: number) {
   const [p] = await db.select().from(producto).where(eq(producto.id, id))
   if (!p) throw new ErrorAplicacion(404, 'El producto no existe.')

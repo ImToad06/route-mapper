@@ -19,6 +19,9 @@ export const productosController = new Elysia({ prefix: '/productos', tags: ['Pr
     query: listarCatalogoSchema,
     detail: { summary: 'Listar productos' },
   })
+  .get('/activos', () => servicio.listarProductosActivos(), {
+    detail: { summary: 'Productos activos (sin paginar)' },
+  })
   .get('/:id', ({ params: { id } }) => servicio.obtenerProducto(id), { params })
   .post(
     '/',
