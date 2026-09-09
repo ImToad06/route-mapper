@@ -12,6 +12,7 @@ import {
   intentoAcceso,
   producto,
   rol,
+  ruta,
   sesion,
   usuario,
   vehiculo,
@@ -29,6 +30,7 @@ export const E2E_ADMIN = {
 export const E2E_ADMIN_FIJO = { correo: 'e2e-admin-fijo@lh.test', contrasena: 'Fijo12345' }
 
 async function limpiar() {
+  await db.delete(ruta).where(like(ruta.codigo, 'R-2031%'))
   await db.delete(destino).where(like(destino.nombreCliente, 'E2E %'))
   await db.delete(zona).where(like(zona.nombre, 'E2E %'))
   await db.delete(producto).where(like(producto.codigo, 'E2E-%'))

@@ -17,6 +17,10 @@ export interface Operacion {
     | 'restablecer_contrasena'
     | 'cambiar_contrasena'
     | 'cambiar_estado'
+    | 'calcular'
+    | 'optimizar'
+    | 'planificar'
+    | 'cancelar'
   entidad:
     | 'usuario'
     | 'conductor'
@@ -26,6 +30,7 @@ export interface Operacion {
     | 'destino'
     | 'ruta'
     | 'sesion'
+    | 'configuracion'
   entidadId?: number | null
   descripcion: string
 }

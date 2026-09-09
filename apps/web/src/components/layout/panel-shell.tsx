@@ -6,6 +6,7 @@ import {
   Map as MapIcon,
   MapPinned,
   Menu,
+  Route as RouteIcon,
   Truck,
   Users,
 } from 'lucide-react'
@@ -25,6 +26,7 @@ interface Enlace {
     | '/panel/productos'
     | '/panel/zonas'
     | '/panel/destinos'
+    | '/panel/rutas'
   etiqueta: string
   icono: ReactNode
   soloAdmin?: boolean
@@ -35,6 +37,11 @@ const enlaces: Enlace[] = [
     to: '/panel',
     etiqueta: 'Inicio',
     icono: <LayoutDashboard className="size-4" aria-hidden="true" />,
+  },
+  {
+    to: '/panel/rutas',
+    etiqueta: 'Rutas',
+    icono: <RouteIcon className="size-4" aria-hidden="true" />,
   },
   {
     to: '/panel/destinos',

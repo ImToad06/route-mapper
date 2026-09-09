@@ -14,3 +14,12 @@ services:
 
   backup:
     profiles: ["completo"]
+
+  # Motores de rutas accesibles desde la API en la máquina (bun run dev).
+  osrm:
+    ports:
+      - "${OSRM_PORT:-5000}:5000"
+
+  vroom:
+    ports:
+      - "${VROOM_PORT:-3300}:3000"

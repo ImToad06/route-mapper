@@ -74,6 +74,25 @@ Al ingresar por primera vez con la contraseña temporal del seed, el sistema exi
   quedan "por verificar" hasta que el coordinador confirme el marcador.
 - Las violaciones de unicidad de PostgreSQL (23505) se traducen a 409 con mensaje en español en `plugins/errores.ts`.
 
+## Rutas y optimización (Fase 3)
+
+- Una ruta es una lista ordenada de paradas (destinos) con productos y cantidades para una fecha y un
+  vehículo. Estados: `borrador → planificada → pendiente_aceptacion → asignada → en_curso → completada | incompleta`,
+  y `cancelada`. Solo se edita en `borrador` (una planificada puede "volver a borrador").
+- `PUT /api/rutas/:id/paradas` reemplaza la lista completa (orden incluido) y borra la geometría calculada.
+- `POST /api/rutas/:id/calcular` pide a **OSRM** el recorrido bodega → paradas → bodega y guarda geometría
+  (polilínea), distancia, duración y ETA por parada (10 min de servicio por parada).
+- `POST /api/rutas/:id/optimizar` resuelve el VRP con **VROOM** (capacidad del vehículo en kg y ventanas
+  de atención de los destinos). Las paradas que no caben quedan al final y se informan. Si VROOM no
+  responde, se usa `/trip` de OSRM (sin capacidad ni ventanas).
+- `POST /api/rutas/:id/planificar` valida ≥ 1 parada, vehículo elegido, carga ≤ capacidad (RF-14) y que
+  todos los destinos tengan ubicación verificada.
+- La bodega (inicio y fin de toda ruta) se configura en `PUT /api/configuracion/bodega` (administrador).
+- Motores en local: `bash infra/osrm/prepare.sh` (una vez; descarga y procesa Colombia), luego
+  `docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile mapas up -d osrm vroom`
+  y en `.env`: `OSRM_URL=http://localhost:5000`, `VROOM_URL=http://localhost:3300`. Sin ellos la
+  aplicación funciona, pero "Calcular" y "Optimizar" quedan deshabilitados.
+
 ## Producción
 
 ```bash

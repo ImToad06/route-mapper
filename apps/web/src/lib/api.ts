@@ -76,3 +76,10 @@ export function mensajeDeError(error: unknown): string {
   }
   return 'Ocurrió un error inesperado. Intente de nuevo.'
 }
+
+/** Convierte el resultado de Eden en datos o lanza el error con el mensaje de la API. */
+export async function datosDe<T>(p: Promise<{ data: T | null; error: unknown }>): Promise<T> {
+  const { data, error } = await p
+  if (error || data === null) throw error ?? new Error('Sin respuesta del servidor')
+  return data
+}

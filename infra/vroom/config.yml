@@ -1,4 +1,5 @@
 cliArgs:
+  baseurl: '/'
   geometry: true
   planmode: false
   threads: 2
