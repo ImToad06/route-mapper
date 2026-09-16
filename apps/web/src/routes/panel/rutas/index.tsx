@@ -79,73 +79,117 @@ function Rutas() {
   }
 
   return (
-    <div className="grid gap-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <div className="grid gap-6 p-2">
+      <div className="flex flex-wrap items-center justify-between gap-4 bg-card p-6 rounded-2xl border border-border shadow-sm">
         <div>
-          <h1 className="text-2xl font-semibold">Rutas</h1>
-          <p className="text-sm text-muted-foreground">
-            Planificación de recorridos por fecha, con paradas, productos y vehículo.
+          <span className="text-xs font-semibold uppercase tracking-wider text-secondary px-3 py-1 rounded-full bg-secondary/10 mb-2 inline-block">
+            Módulo de Planificación • VRP
+          </span>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
+            Planificador y Optimización de Rutas
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Sustitución de planillas físicas, cubicaje automatizado y secuenciación de despachos.
           </p>
         </div>
-        <Button onClick={() => setNueva(true)}>
-          <Plus className="size-4" aria-hidden="true" /> Nueva ruta
+        <Button
+          onClick={() => setNueva(true)}
+          className="bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-sm rounded-xl px-5 py-2.5 font-semibold"
+        >
+          <Plus className="size-4 mr-1.5" aria-hidden="true" /> Nueva ruta VRP
         </Button>
       </div>
-      <BarraBusqueda
-        valor={lista.buscar}
-        alCambiar={lista.setBuscar}
-        placeholder="Buscar por código u observaciones"
-      >
-        <Select
-          value={estado}
-          onValueChange={(v) => {
-            setEstado(v as EstadoRuta | typeof TODOS)
-            lista.setPagina(1)
-          }}
+
+      <div className="bg-muted/40 p-4 rounded-2xl border border-border/60">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/50 shadow-sm">
+            <div className="size-8 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center font-bold text-sm">
+              1
+            </div>
+            <div>
+              <p className="text-xs font-bold text-foreground">1. Zona y Vehículo</p>
+              <p className="text-[11px] text-secondary font-medium">Asignación técnica</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/50 shadow-sm">
+            <div className="size-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
+              2
+            </div>
+            <div>
+              <p className="text-xs font-bold text-foreground">2. Selección de Pedidos</p>
+              <p className="text-[11px] text-muted-foreground font-medium">Cubicaje &amp; Carga</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/50 shadow-sm opacity-80">
+            <div className="size-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center font-semibold text-sm">
+              3
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground">3. Secuenciación Lógica</p>
+              <p className="text-[11px] text-muted-foreground font-medium">
+                Ventanas horarias &amp; TSP
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <BarraBusqueda
+          valor={lista.buscar}
+          alCambiar={lista.setBuscar}
+          placeholder="Buscar por código u observaciones"
         >
-          <SelectTrigger className="w-52" aria-label="Filtrar por estado">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={TODOS}>Todos los estados</SelectItem>
-            {ESTADOS_RUTA.map((e) => (
-              <SelectItem key={e} value={e}>
-                {ETIQUETAS_ESTADO_RUTA[e]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Input
-          type="date"
-          value={desde}
-          onChange={(e) => setDesde(e.target.value)}
-          className="w-40"
-          aria-label="Desde"
-        />
-        <Input
-          type="date"
-          value={hasta}
-          onChange={(e) => setHasta(e.target.value)}
-          className="w-40"
-          aria-label="Hasta"
-        />
-      </BarraBusqueda>
-      <div className="overflow-x-auto rounded-md border bg-card">
+          <Select
+            value={estado}
+            onValueChange={(v) => {
+              setEstado(v as EstadoRuta | typeof TODOS)
+              lista.setPagina(1)
+            }}
+          >
+            <SelectTrigger className="w-52 h-10 rounded-xl bg-card" aria-label="Filtrar por estado">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={TODOS}>Todos los estados</SelectItem>
+              {ESTADOS_RUTA.map((e) => (
+                <SelectItem key={e} value={e}>
+                  {ETIQUETAS_ESTADO_RUTA[e]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Input
+            type="date"
+            value={desde}
+            onChange={(e) => setDesde(e.target.value)}
+            className="w-40 h-10 rounded-xl bg-card"
+            aria-label="Desde"
+          />
+          <Input
+            type="date"
+            value={hasta}
+            onChange={(e) => setHasta(e.target.value)}
+            className="w-40 h-10 rounded-xl bg-card"
+            aria-label="Hasta"
+          />
+        </BarraBusqueda>
+      </div>
+
+      <div className="overflow-x-auto rounded-2xl border border-border/60 bg-card shadow-sm">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Código</TableHead>
-              <TableHead>Fecha</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead className="text-right">Paradas</TableHead>
-              <TableHead className="text-right">Carga</TableHead>
-              <TableHead>Vehículo</TableHead>
-              <TableHead>Conductor</TableHead>
-              <TableHead className="text-right">Distancia</TableHead>
+            <TableRow className="bg-muted/50">
+              <TableHead className="font-bold">Código Manifiesto</TableHead>
+              <TableHead className="font-bold">Fecha</TableHead>
+              <TableHead className="font-bold">Estado</TableHead>
+              <TableHead className="text-right font-bold">Paradas</TableHead>
+              <TableHead className="text-right font-bold">Carga (kg)</TableHead>
+              <TableHead className="font-bold">Vehículo</TableHead>
+              <TableHead className="font-bold">Conductor</TableHead>
+              <TableHead className="text-right font-bold">Distancia</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isPending && <FilaEstado colSpan={8}>Cargando…</FilaEstado>}
+            {isPending && <FilaEstado colSpan={8}>Cargando rutas VRP...</FilaEstado>}
             {error && (
               <FilaEstado colSpan={8} tono="error">
                 {mensajeDeError(error)}
@@ -153,43 +197,49 @@ function Rutas() {
             )}
             {data?.datos.length === 0 && (
               <FilaEstado colSpan={8}>
-                No hay rutas que coincidan. Cree la primera con "Nueva ruta".
+                No hay rutas programadas. Cree la primera con "Nueva ruta VRP".
               </FilaEstado>
             )}
             {data?.datos.map((r) => (
-              <TableRow key={r.id}>
+              <TableRow key={r.id} className="hover:bg-muted/30 transition-colors">
                 <TableCell>
                   <Link
                     to="/panel/rutas/$rutaId"
                     params={{ rutaId: String(r.id) }}
-                    className="font-mono font-medium text-primary underline-offset-2 hover:underline"
+                    className="font-mono font-bold text-secondary underline-offset-2 hover:underline"
                   >
                     {r.codigo}
                   </Link>
                 </TableCell>
-                <TableCell className="capitalize">{formatearFechaLarga(r.fecha)}</TableCell>
+                <TableCell className="capitalize font-medium">
+                  {formatearFechaLarga(r.fecha)}
+                </TableCell>
                 <TableCell>
                   <EstadoRutaBadge estado={r.estado} />
                 </TableCell>
-                <TableCell className="text-right tabular-nums">{r.totalParadas}</TableCell>
+                <TableCell className="text-right tabular-nums font-semibold">
+                  {r.totalParadas}
+                </TableCell>
                 <TableCell
-                  className={`text-right tabular-nums ${r.vehiculo && r.cargaKg > r.vehiculo.capacidadKg ? 'text-destructive' : ''}`}
+                  className={`text-right tabular-nums font-semibold ${r.vehiculo && r.cargaKg > r.vehiculo.capacidadKg ? 'text-destructive' : 'text-foreground'}`}
                 >
                   {formatearKg(r.cargaKg)}
                 </TableCell>
                 <TableCell>
                   {r.vehiculo ? (
-                    <span className="font-mono">{r.vehiculo.placa}</span>
+                    <span className="font-mono font-medium bg-muted/60 px-2.5 py-1 rounded-lg">
+                      {r.vehiculo.placa}
+                    </span>
                   ) : (
                     <span className="text-muted-foreground">—</span>
                   )}
                 </TableCell>
-                <TableCell>
+                <TableCell className="font-medium">
                   {r.conductor?.nombre ?? (
-                    <span className="text-muted-foreground">Sin asignar</span>
+                    <span className="text-muted-foreground italic">Sin asignar</span>
                   )}
                 </TableCell>
-                <TableCell className="text-right tabular-nums">
+                <TableCell className="text-right tabular-nums font-mono font-medium">
                   {formatearDistancia(r.distanciaM)}
                 </TableCell>
               </TableRow>
@@ -210,11 +260,11 @@ function Rutas() {
       <DialogoFormulario
         abierto={nueva}
         alCerrar={() => setNueva(false)}
-        titulo="Nueva ruta"
-        descripcion="Después de crearla agregará las paradas y los productos."
+        titulo="Crear Nueva Ruta y Manifiesto"
+        descripcion="Asigne la unidad y los parámetros operativos VRP iniciales."
         form={form}
         onSubmit={crear}
-        textoGuardar="Crear ruta"
+        textoGuardar="Crear y configurar paradas"
       >
         <CampoTexto
           control={form.control}
@@ -226,9 +276,9 @@ function Rutas() {
         <CampoSelect
           control={form.control}
           name="vehiculoId"
-          etiqueta="Vehículo"
+          etiqueta="Vehículo de Carga"
           valorNulo={SIN_VEHICULO}
-          descripcion="Se usa para validar la capacidad de carga. Puede elegirse después."
+          descripcion="Se utiliza para la validación de cubicaje y peso máximo (kg)."
           opciones={[
             { valor: SIN_VEHICULO, etiqueta: 'Elegir después' },
             ...(vehiculos.data?.datos.map((v) => ({
@@ -240,8 +290,8 @@ function Rutas() {
         <CampoTexto
           control={form.control}
           name="observaciones"
-          etiqueta="Observaciones"
-          placeholder="Opcional"
+          etiqueta="Observaciones de despacho"
+          placeholder="Ej. Despacho matutino Vía 40"
         />
       </DialogoFormulario>
     </div>
