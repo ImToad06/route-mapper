@@ -1,11 +1,16 @@
 import { cambiarContrasenaSchema, loginSchema } from '@lh/shared'
 import { Elysia } from 'elysia'
 import { env } from '../../config/env.ts'
-import { cookieSegura, ipCliente } from '../../lib/http.ts'
+import { cookieSegura, ipCliente, origenPermitido } from '../../lib/http.ts'
 import { autenticacion } from '../../plugins/auth.ts'
+import { ErrorAplicacion } from '../../plugins/errores.ts'
 import { limitarPorIp } from '../../plugins/rate-limit.ts'
 import type { MetaPeticion } from './auth.repository.ts'
 import * as servicio from './auth.service.ts'
+
+function verificarOrigen({ request }: { request: Request }) {
+  if (!origenPermitido(request)) throw new ErrorAplicacion(403, 'Origen no permitido.')
+}
 
 export const COOKIE_REFRESCO = 'lh_refresco'
 
@@ -73,7 +78,10 @@ export const authController = new Elysia({ prefix: '/auth', tags: ['AutenticaciÃ
         throw err
       }
     },
-    { detail: { summary: 'Renovar el token de acceso usando la cookie de refresco' } },
+    {
+      beforeHandle: verificarOrigen,
+      detail: { summary: 'Renovar el token de acceso usando la cookie de refresco' },
+    },
   )
   .post(
     '/cerrar',
@@ -83,7 +91,7 @@ export const authController = new Elysia({ prefix: '/auth', tags: ['AutenticaciÃ
       borrarCookie(c, request)
       return { mensaje: 'SesiÃ³n cerrada.' }
     },
-    { detail: { summary: 'Cerrar sesiÃ³n (RF-03)' } },
+    { beforeHandle: verificarOrigen, detail: { summary: 'Cerrar sesiÃ³n (RF-03)' } },
   )
   .get('/yo', ({ usuario }) => servicio.usuarioActual(usuario), {
     auth: true,

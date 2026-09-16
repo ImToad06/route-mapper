@@ -34,6 +34,21 @@ export function cookieSegura(request: Request): boolean {
   return esHttps(request)
 }
 
+/**
+ * RNF-04: defensa adicional contra CSRF para /auth/refrescar y /auth/cerrar, las únicas rutas que se
+ * autentican solo con la cookie (sin bearer token). SameSite=Lax ya bloquea el POST cross-site en
+ * navegadores modernos; esto es una segunda capa por si el navegador no lo respeta. Si el cliente no
+ * manda Origin (curl, apps nativas) se deja pasar: no hay cookie de navegador que un sitio ajeno pueda
+ * reenviar en ese caso.
+ */
+export function origenPermitido(request: Request): boolean {
+  const origen = request.headers.get('origin')
+  if (!origen) return true
+  return env.CORS_ORIGIN.split(',')
+    .map((o) => o.trim())
+    .includes(origen)
+}
+
 /** Escapa comodines para usar texto libre dentro de un patrón LIKE/ILIKE. */
 export function escaparLike(texto: string): string {
   return texto.replace(/[\\%_]/g, '\\$&')
