@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { eq, inArray, like } from 'drizzle-orm'
 import { db } from '../../db/client.ts'
-import { destino, producto, ruta, vehiculo, zona } from '../../db/schema/index.ts'
+import { configuracion, destino, producto, ruta, vehiculo, zona } from '../../db/schema/index.ts'
 import {
   bearer,
   crearUsuarioDePrueba,
@@ -66,6 +66,18 @@ const proveedorFalso: ProveedorEnrutamiento = {
 
 beforeAll(async () => {
   usarProveedorEnrutamiento(proveedorFalso)
+  // La bodega es requisito para calcular/optimizar recorridos; en CI no hay db:seed, así que se
+  // configura aquí para que estas pruebas no dependan de datos externos a la suite.
+  for (const [clave, valor] of [
+    ['bodega.direccion', 'Vía 40 # 73-290, Barranquilla'],
+    ['bodega.latitud', '11.0053'],
+    ['bodega.longitud', '-74.7936'],
+  ] as const) {
+    await db
+      .insert(configuracion)
+      .values({ clave, valor })
+      .onConflictDoUpdate({ target: configuracion.clave, set: { valor } })
+  }
   coord = await crearUsuarioDePrueba({ rol: 'coordinador' })
   conductorU = await crearUsuarioDePrueba({ rol: 'conductor' })
   token = (await iniciarSesionComo(coord.correo, coord.contrasena)).tokenAcceso

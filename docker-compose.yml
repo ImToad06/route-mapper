@@ -24,6 +24,7 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
+      TZ: ${TZ:-America/Bogota}
       API_PORT: 3000
       DATABASE_URL: postgres://${POSTGRES_USER:-lh}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-lh_rutas}
       JWT_SECRET: ${JWT_SECRET:?Defina JWT_SECRET en .env}

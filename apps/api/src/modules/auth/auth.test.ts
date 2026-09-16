@@ -78,9 +78,8 @@ describe('POST /auth/login (RF-01, RNF-04)', () => {
   test('cuerpo inválido devuelve 422 en español', async () => {
     const res = await json('POST', '/auth/login', { correo: 'no-es-correo', contrasena: '' })
     expect(res.status).toBe(422)
-    expect(((await res.json()) as { mensaje: string }).mensaje).toBe(
-      'Los datos enviados no son válidos.',
-    )
+    // El mensaje surge del primer issue de Zod (ver errores.ts), no del genérico.
+    expect(((await res.json()) as { mensaje: string }).mensaje).toBe('Ingrese un correo válido')
   })
 })
 

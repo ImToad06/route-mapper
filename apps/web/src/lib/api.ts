@@ -83,3 +83,34 @@ export async function datosDe<T>(p: Promise<{ data: T | null; error: unknown }>)
   if (error || data === null) throw error ?? new Error('Sin respuesta del servidor')
   return data
 }
+
+/** Dispara la descarga de un blob ya generado (archivo de la API o generado en el navegador). */
+export function descargarBlob(blob: Blob, nombreArchivo: string): void {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = nombreArchivo
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+}
+
+/**
+ * Descarga un archivo generado por la API (Excel, etc.) autenticado con el token de acceso.
+ * No puede hacerse con un simple `<a href>` porque el token va en el header Authorization.
+ */
+export async function descargarArchivo(ruta: string, nombreArchivo: string): Promise<void> {
+  const res = await fetchAutenticado(`${baseUrl}/api${ruta}`)
+  if (!res.ok) {
+    let mensaje = 'No se pudo generar el archivo.'
+    try {
+      const cuerpo = (await res.json()) as { mensaje?: string }
+      if (cuerpo.mensaje) mensaje = cuerpo.mensaje
+    } catch {
+      // sin cuerpo JSON: se conserva el mensaje genérico
+    }
+    throw new Error(mensaje)
+  }
+  descargarBlob(await res.blob(), nombreArchivo)
+}

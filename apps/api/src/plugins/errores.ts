@@ -45,9 +45,13 @@ export const manejadorErrores = new Elysia({ name: 'manejador-errores' })
       case 'ErrorAplicacion':
         set.status = error.status
         return { mensaje: error.message, detalles: error.detalles }
-      case 'VALIDATION':
+      case 'VALIDATION': {
         set.status = 422
-        return { mensaje: 'Los datos enviados no son válidos.', detalles: error.all }
+        // Los esquemas Zod del proyecto siempre traen mensaje en español (RNF-02): se usa el primero
+        // en vez del genérico para que el error sea accionable (p. ej. "La fecha de inicio debe...").
+        const primero = (error.all as { summary?: string }[] | undefined)?.[0]?.summary
+        return { mensaje: primero || 'Los datos enviados no son válidos.', detalles: error.all }
+      }
       case 'NOT_FOUND':
         set.status = 404
         return { mensaje: 'Recurso no encontrado.' }
