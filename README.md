@@ -1,3 +1,5 @@
+contributors : Randy Zapata, Juan Reyes 
+
 # Rutas L&H Distribuciones
 
 Sistema de información logística para la gestión y asignación de rutas de distribución
