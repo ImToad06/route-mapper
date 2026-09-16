@@ -52,6 +52,37 @@ export const TIPOS_NOTIFICACION = [
 ] as const
 export type TipoNotificacion = (typeof TIPOS_NOTIFICACION)[number]
 
+/** Acciones y entidades que se registran en la bitácora (RF-27). */
+export const ACCIONES_BITACORA = [
+  'crear',
+  'actualizar',
+  'desactivar',
+  'activar',
+  'eliminar',
+  'asignar',
+  'restablecer_contrasena',
+  'cambiar_contrasena',
+  'cambiar_estado',
+  'calcular',
+  'optimizar',
+  'planificar',
+  'cancelar',
+] as const
+export type AccionBitacora = (typeof ACCIONES_BITACORA)[number]
+
+export const ENTIDADES_BITACORA = [
+  'usuario',
+  'conductor',
+  'vehiculo',
+  'producto',
+  'zona',
+  'destino',
+  'ruta',
+  'sesion',
+  'configuracion',
+] as const
+export type EntidadBitacora = (typeof ENTIDADES_BITACORA)[number]
+
 /** Etiquetas en español para mostrar en la interfaz. */
 export const ETIQUETAS_ESTADO_RUTA: Record<EstadoRuta, string> = {
   borrador: 'Borrador',
@@ -82,4 +113,32 @@ export const ETIQUETAS_TIPO_NOVEDAD: Record<TipoNovedad, string> = {
   direccion_incorrecta: 'Dirección incorrecta',
   devolucion_parcial: 'Devolución parcial',
   otro: 'Otro',
+}
+
+export const ETIQUETAS_ACCION_BITACORA: Record<AccionBitacora, string> = {
+  crear: 'Crear',
+  actualizar: 'Actualizar',
+  desactivar: 'Desactivar',
+  activar: 'Activar',
+  eliminar: 'Eliminar',
+  asignar: 'Asignar',
+  restablecer_contrasena: 'Restablecer contraseña',
+  cambiar_contrasena: 'Cambiar contraseña',
+  cambiar_estado: 'Cambiar estado',
+  calcular: 'Calcular recorrido',
+  optimizar: 'Optimizar recorrido',
+  planificar: 'Planificar',
+  cancelar: 'Cancelar',
+}
+
+export const ETIQUETAS_ENTIDAD_BITACORA: Record<EntidadBitacora, string> = {
+  usuario: 'Usuario',
+  conductor: 'Conductor',
+  vehiculo: 'Vehículo',
+  producto: 'Producto',
+  zona: 'Zona',
+  destino: 'Destino',
+  ruta: 'Ruta',
+  sesion: 'Sesión',
+  configuracion: 'Configuración',
 }

@@ -1,6 +1,8 @@
 import { Link, Outlet } from '@tanstack/react-router'
 import {
+  BarChart3,
   Boxes,
+  ClipboardList,
   IdCard,
   LayoutDashboard,
   Map as MapIcon,
@@ -27,6 +29,8 @@ interface Enlace {
     | '/panel/zonas'
     | '/panel/destinos'
     | '/panel/rutas'
+    | '/panel/reportes'
+    | '/panel/bitacora'
   etiqueta: string
   icono: ReactNode
   soloAdmin?: boolean
@@ -70,9 +74,20 @@ const enlaces: Enlace[] = [
     soloAdmin: true,
   },
   {
+    to: '/panel/reportes',
+    etiqueta: 'Reportes',
+    icono: <BarChart3 className="size-4" aria-hidden="true" />,
+  },
+  {
     to: '/panel/usuarios',
     etiqueta: 'Usuarios',
     icono: <Users className="size-4" aria-hidden="true" />,
+    soloAdmin: true,
+  },
+  {
+    to: '/panel/bitacora',
+    etiqueta: 'Bitácora',
+    icono: <ClipboardList className="size-4" aria-hidden="true" />,
     soloAdmin: true,
   },
 ]
