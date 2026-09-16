@@ -1,4 +1,11 @@
-import { ESTADOS_RUTA_EDITABLES, ESTADOS_RUTA_TERMINALES } from '@lh/shared'
+import {
+  ESTADOS_RUTA_EDITABLES,
+  ESTADOS_RUTA_TERMINALES,
+  type EstadoParada,
+  type EstadoRuta,
+  ETIQUETAS_ESTADO_PARADA,
+  ETIQUETAS_ESTADO_RUTA,
+} from '@lh/shared'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import {
@@ -9,6 +16,7 @@ import {
   Save,
   Sparkles,
   Undo2,
+  UserRound,
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
@@ -41,6 +49,7 @@ import {
   cancelarRuta,
   claveRutas,
   guardarParadas,
+  historialRutaQuery,
   motorRutasQuery,
   optimizarRuta,
   planificarRuta,
@@ -48,11 +57,19 @@ import {
   rutaQuery,
   volverABorrador,
 } from '@/features/rutas/api'
+import { DialogoAsignarConductor } from '@/features/rutas/dialogo-asignar-conductor'
 import { EditorParadas, type ParadaEditable } from '@/features/rutas/editor-paradas'
 import { EstadoRutaBadge } from '@/features/rutas/estado-ruta'
 import { MapaRuta } from '@/features/rutas/mapa-ruta'
 import { mensajeDeError } from '@/lib/api'
-import { aFechaIso, formatearDistancia, formatearDuracion, formatearKg } from '@/lib/formato'
+import { esPersonalDeDespacho, useAuth } from '@/lib/auth-store'
+import {
+  aFechaIso,
+  formatearDistancia,
+  formatearDuracion,
+  formatearFechaHora,
+  formatearKg,
+} from '@/lib/formato'
 
 export const Route = createFileRoute('/panel/rutas/$rutaId')({ component: EditorRuta })
 
@@ -88,12 +105,15 @@ function EditorRuta() {
   const motor = useQuery(motorRutasQuery)
   const vehiculos = useQuery(vehiculosActivosQuery)
   const productos = useQuery(productosActivosQuery)
+  const historial = useQuery(historialRutaQuery(id))
+  const puedeAsignar = useAuth((s) => esPersonalDeDespacho(s.usuario?.rol))
   const [paradas, setParadas] = useState<ParadaEditable[]>([])
   const [base, setBase] = useState('')
   const [ocupado, setOcupado] = useState<string | null>(null)
   const [resaltada, setResaltada] = useState<number | null>(null)
   const [confirmarCancelar, setConfirmarCancelar] = useState(false)
   const [fechaLocal, setFechaLocal] = useState('')
+  const [dialogoConductor, setDialogoConductor] = useState<'asignar' | 'reasignar' | null>(null)
 
   // Al cargar o recargar la ruta se toma la lista del servidor como base de edición, salvo que el
   // usuario tenga cambios sin guardar (p. ej. tras cambiar el vehículo): entonces se conserva su borrador.
@@ -263,6 +283,21 @@ function EditorRuta() {
               <Undo2 className="size-4" aria-hidden="true" /> Volver a borrador
             </Button>
           )}
+          {puedeAsignar && ruta.estado === 'planificada' && (
+            <Button onClick={() => setDialogoConductor('asignar')} disabled={ocupado !== null}>
+              <UserRound className="size-4" aria-hidden="true" /> Asignar conductor
+            </Button>
+          )}
+          {puedeAsignar &&
+            (ruta.estado === 'pendiente_aceptacion' || ruta.estado === 'asignada') && (
+              <Button
+                variant="secondary"
+                onClick={() => setDialogoConductor('reasignar')}
+                disabled={ocupado !== null}
+              >
+                <UserRound className="size-4" aria-hidden="true" /> Reasignar conductor
+              </Button>
+            )}
           {!ESTADOS_RUTA_TERMINALES.includes(ruta.estado) && (
             <Button
               variant="outline"
@@ -312,6 +347,27 @@ function EditorRuta() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="grid gap-1.5 sm:col-span-2">
+              <Label>Conductor</Label>
+              {ruta.conductor ? (
+                <p className="text-sm">
+                  {ruta.conductor.nombre}
+                  {ruta.estado === 'pendiente_aceptacion' && (
+                    <span className="text-muted-foreground"> · pendiente de aceptación</span>
+                  )}
+                  {ruta.estado === 'asignada' && (
+                    <span className="text-muted-foreground"> · aceptó la ruta</span>
+                  )}
+                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground">Sin asignar</p>
+              )}
+              {ruta.motivoRechazo && ruta.estado === 'planificada' && (
+                <p className="text-sm text-amber-700">
+                  El conductor anterior rechazó la ruta: {ruta.motivoRechazo}
+                </p>
+              )}
             </div>
             <div className="grid gap-1.5 sm:col-span-2">
               <div className="flex items-baseline justify-between text-sm">
@@ -377,6 +433,48 @@ function EditorRuta() {
         </div>
       </div>
 
+      {(historial.data?.length ?? 0) > 0 && (
+        <div className="rounded-md border bg-card p-4">
+          <h2 className="mb-2 text-sm font-medium">Historial de estados (RF-21)</h2>
+          <ul className="grid gap-1.5 text-sm">
+            {historial.data?.map((h) => (
+              <li
+                key={h.id}
+                className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5"
+              >
+                <span>
+                  {h.paradaId != null ? (
+                    <>
+                      Parada:{' '}
+                      <span className="font-medium">
+                        {ETIQUETAS_ESTADO_PARADA[h.estadoNuevo as EstadoParada] ?? h.estadoNuevo}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      {h.estadoAnterior && (
+                        <span className="text-muted-foreground">
+                          {ETIQUETAS_ESTADO_RUTA[h.estadoAnterior as EstadoRuta] ??
+                            h.estadoAnterior}{' '}
+                          →{' '}
+                        </span>
+                      )}
+                      <span className="font-medium">
+                        {ETIQUETAS_ESTADO_RUTA[h.estadoNuevo as EstadoRuta] ?? h.estadoNuevo}
+                      </span>
+                    </>
+                  )}
+                  {h.nota && <span className="text-muted-foreground"> — {h.nota}</span>}
+                </span>
+                <span className="shrink-0 text-muted-foreground tabular-nums">
+                  {formatearFechaHora(h.fechaHora)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <AlertDialog open={confirmarCancelar} onOpenChange={setConfirmarCancelar}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -397,6 +495,16 @@ function EditorRuta() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <DialogoAsignarConductor
+        abierto={dialogoConductor !== null}
+        alCerrar={() => setDialogoConductor(null)}
+        rutaId={id}
+        codigo={ruta.codigo}
+        vehiculoActualId={ruta.vehiculo?.id ?? null}
+        conductorActualId={ruta.conductor?.id ?? null}
+        reasignar={dialogoConductor === 'reasignar'}
+      />
     </div>
   )
 }

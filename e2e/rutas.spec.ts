@@ -76,7 +76,8 @@ test.describe
       }
       await page.getByRole('button', { name: 'Marcar como planificada' }).click()
       await expect(page.getByText(/Ruta planificada/)).toBeVisible()
-      await expect(page.getByText('Planificada', { exact: true })).toBeVisible()
+      // .first(): el mismo texto también aparece en la línea de historial de estados (RF-21).
+      await expect(page.getByText('Planificada', { exact: true }).first()).toBeVisible()
       await expect(page.getByRole('button', { name: 'Guardar paradas' })).toHaveCount(0)
       await capturar(page, 'p3-3-planificada')
       await page.getByRole('button', { name: 'Volver a borrador' }).click()

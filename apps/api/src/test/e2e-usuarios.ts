@@ -28,6 +28,8 @@ export const E2E_ADMIN = {
 }
 /** Administrador con contraseña definitiva, para las pruebas que no ejercitan el primer ingreso. */
 export const E2E_ADMIN_FIJO = { correo: 'e2e-admin-fijo@lh.test', contrasena: 'Fijo12345' }
+/** Conductor con ficha y contraseña definitivas, para las pruebas de la app del conductor. */
+export const E2E_CONDUCTOR_FIJO = { correo: 'e2e-conductor-fijo@lh.test', contrasena: 'Fijo12345' }
 
 async function limpiar() {
   await db.delete(ruta).where(like(ruta.codigo, 'R-2031%'))
@@ -74,7 +76,31 @@ async function crear() {
     contrasenaHash: await hashContrasena(E2E_ADMIN_FIJO.contrasena),
     debeCambiarContrasena: false,
   })
-  console.log(`e2e: creados ${E2E_ADMIN.correo} y ${E2E_ADMIN_FIJO.correo}`)
+  const [rolConductor] = await db
+    .select({ id: rol.id })
+    .from(rol)
+    .where(eq(rol.nombre, 'conductor'))
+  if (!rolConductor) throw new Error('rol conductor no existe')
+  const [uConductor] = await db
+    .insert(usuario)
+    .values({
+      rolId: rolConductor.id,
+      nombre: 'E2E Conductor Fijo',
+      correo: E2E_CONDUCTOR_FIJO.correo,
+      contrasenaHash: await hashContrasena(E2E_CONDUCTOR_FIJO.contrasena),
+      debeCambiarContrasena: false,
+    })
+    .returning({ id: usuario.id })
+  if (!uConductor) throw new Error('no se pudo crear el usuario del conductor e2e')
+  await db.insert(conductor).values({
+    usuarioId: uConductor.id,
+    nombre: 'E2E Conductor Fijo',
+    documento: String(Date.now()).slice(-9),
+    licencia: 'LIC-E2E-FIJO',
+  })
+  console.log(
+    `e2e: creados ${E2E_ADMIN.correo}, ${E2E_ADMIN_FIJO.correo} y ${E2E_CONDUCTOR_FIJO.correo}`,
+  )
 }
 
 const accion = process.argv[2]

@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { ESTADOS_RUTA, type EstadoRuta, type Rol } from '../enums.ts'
+import { ESTADOS_RUTA, type EstadoRuta, type Rol, TIPOS_NOVEDAD } from '../enums.ts'
 import { paginacionSchema, textoOpcional } from './comunes.ts'
 
 const fechaSchema = z.iso.date({ error: 'Ingrese una fecha válida (AAAA-MM-DD)' })
@@ -39,6 +39,30 @@ export const paradasRutaSchema = z.object({
 })
 export type ParadasRutaInput = z.infer<typeof paradasRutaSchema>
 
+/** RF-15: asignar conductor (y opcionalmente reelegir vehículo) a una ruta planificada. */
+export const asignarRutaSchema = z.object({
+  conductorId: z.coerce.number({ error: 'Seleccione un conductor' }).int().positive(),
+  vehiculoId: z.coerce.number().int().positive().optional(),
+})
+export type AsignarRutaInput = z.infer<typeof asignarRutaSchema>
+
+/** RF-17: reasignar a otro conductor una ruta ya asignada (aceptada o no todavía). */
+export const reasignarRutaSchema = asignarRutaSchema
+export type ReasignarRutaInput = z.infer<typeof reasignarRutaSchema>
+
+/** RF-18: el conductor rechaza la ruta que le asignaron. */
+export const rechazarRutaSchema = z.object({
+  motivo: z.string().trim().min(1, 'Indique el motivo del rechazo').max(255),
+})
+export type RechazarRutaInput = z.infer<typeof rechazarRutaSchema>
+
+/** RF-20: el conductor reporta una novedad al no poder completar una parada. */
+export const fallarParadaSchema = z.object({
+  tipo: z.enum(TIPOS_NOVEDAD),
+  nota: z.string().trim().max(500).optional(),
+})
+export type FallarParadaInput = z.infer<typeof fallarParadaSchema>
+
 export const listarRutasSchema = paginacionSchema.extend({
   estado: z.enum(ESTADOS_RUTA).optional(),
   desde: z.iso.date().optional(),
@@ -63,7 +87,11 @@ export const TRANSICIONES_RUTA: Record<EstadoRuta, Partial<Record<EstadoRuta, re
     planificada: ['conductor', 'coordinador'],
     cancelada: ['coordinador'],
   },
-  asignada: { en_curso: ['conductor'], cancelada: ['coordinador'] },
+  asignada: {
+    en_curso: ['conductor'],
+    pendiente_aceptacion: ['coordinador'],
+    cancelada: ['coordinador'],
+  },
   en_curso: { completada: ['conductor'], incompleta: ['conductor'], cancelada: ['coordinador'] },
   completada: {},
   incompleta: {},

@@ -16,6 +16,7 @@ import { Route as IngresarRouteImport } from './routes/ingresar'
 import { Route as PanelRouteImport } from './routes/panel'
 import { Route as ConductorIndexRouteImport } from './routes/conductor/index'
 import { Route as ConductorCuentaRouteImport } from './routes/conductor/cuenta'
+import { Route as ConductorRutaRouteImport } from './routes/conductor/ruta'
 import { Route as PanelIndexRouteImport } from './routes/panel/index'
 import { Route as PanelConductoresRouteImport } from './routes/panel/conductores'
 import { Route as PanelCuentaRouteImport } from './routes/panel/cuenta'
@@ -61,6 +62,11 @@ const ConductorIndexRoute = ConductorIndexRouteImport.update({
 const ConductorCuentaRoute = ConductorCuentaRouteImport.update({
   id: '/cuenta',
   path: '/cuenta',
+  getParentRoute: () => ConductorRoute,
+} as any)
+const ConductorRutaRoute = ConductorRutaRouteImport.update({
+  id: '/ruta',
+  path: '/ruta',
   getParentRoute: () => ConductorRoute,
 } as any)
 const PanelIndexRoute = PanelIndexRouteImport.update({
@@ -126,6 +132,7 @@ export interface FileRoutesByFullPath {
   '/ingresar': typeof IngresarRoute
   '/panel': typeof PanelRouteWithChildren
   '/conductor/cuenta': typeof ConductorCuentaRoute
+  '/conductor/ruta': typeof ConductorRutaRoute
   '/panel/conductores': typeof PanelConductoresRoute
   '/panel/cuenta': typeof PanelCuentaRoute
   '/panel/destinos': typeof PanelDestinosRoute
@@ -144,6 +151,7 @@ export interface FileRoutesByTo {
   '/cambiar-contrasena': typeof CambiarContrasenaRoute
   '/ingresar': typeof IngresarRoute
   '/conductor/cuenta': typeof ConductorCuentaRoute
+  '/conductor/ruta': typeof ConductorRutaRoute
   '/panel/conductores': typeof PanelConductoresRoute
   '/panel/cuenta': typeof PanelCuentaRoute
   '/panel/destinos': typeof PanelDestinosRoute
@@ -165,6 +173,7 @@ export interface FileRoutesById {
   '/ingresar': typeof IngresarRoute
   '/panel': typeof PanelRouteWithChildren
   '/conductor/cuenta': typeof ConductorCuentaRoute
+  '/conductor/ruta': typeof ConductorRutaRoute
   '/panel/conductores': typeof PanelConductoresRoute
   '/panel/cuenta': typeof PanelCuentaRoute
   '/panel/destinos': typeof PanelDestinosRoute
@@ -187,6 +196,7 @@ export interface FileRouteTypes {
     | '/ingresar'
     | '/panel'
     | '/conductor/cuenta'
+    | '/conductor/ruta'
     | '/panel/conductores'
     | '/panel/cuenta'
     | '/panel/destinos'
@@ -205,6 +215,7 @@ export interface FileRouteTypes {
     | '/cambiar-contrasena'
     | '/ingresar'
     | '/conductor/cuenta'
+    | '/conductor/ruta'
     | '/panel/conductores'
     | '/panel/cuenta'
     | '/panel/destinos'
@@ -225,6 +236,7 @@ export interface FileRouteTypes {
     | '/ingresar'
     | '/panel'
     | '/conductor/cuenta'
+    | '/conductor/ruta'
     | '/panel/conductores'
     | '/panel/cuenta'
     | '/panel/destinos'
@@ -296,6 +308,13 @@ declare module '@tanstack/react-router' {
       path: '/cuenta'
       fullPath: '/conductor/cuenta'
       preLoaderRoute: typeof ConductorCuentaRouteImport
+      parentRoute: typeof ConductorRoute
+    }
+    '/conductor/ruta': {
+      id: '/conductor/ruta'
+      path: '/ruta'
+      fullPath: '/conductor/ruta'
+      preLoaderRoute: typeof ConductorRutaRouteImport
       parentRoute: typeof ConductorRoute
     }
     '/panel/': {
@@ -380,11 +399,13 @@ declare module '@tanstack/react-router' {
 
 interface ConductorRouteChildren {
   ConductorCuentaRoute: typeof ConductorCuentaRoute
+  ConductorRutaRoute: typeof ConductorRutaRoute
   ConductorIndexRoute: typeof ConductorIndexRoute
 }
 
 const ConductorRouteChildren: ConductorRouteChildren = {
   ConductorCuentaRoute: ConductorCuentaRoute,
+  ConductorRutaRoute: ConductorRutaRoute,
   ConductorIndexRoute: ConductorIndexRoute,
 }
 

@@ -1,16 +1,34 @@
 import {
   type ActualizarRutaInput,
+  type AsignarRutaInput,
   type CrearRutaInput,
   ESTADOS_RUTA_EDITABLES,
+  ESTADOS_RUTA_TERMINALES,
   type EstadoRuta,
   ETIQUETAS_ESTADO_RUTA,
+  type FallarParadaInput,
   interpretarHorario,
   type ListarRutasInput,
   type ParadasRutaInput,
   puedeTransicionar,
+  type ReasignarRutaInput,
+  type RechazarRutaInput,
 } from '@lh/shared'
-import { and, asc, desc, eq, gte, inArray, like, lte, type SQL, sql } from 'drizzle-orm'
-import { db } from '../../db/client.ts'
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gte,
+  inArray,
+  like,
+  lte,
+  ne,
+  notInArray,
+  type SQL,
+  sql,
+} from 'drizzle-orm'
+import { type Db, db } from '../../db/client.ts'
 import {
   conductor,
   destino,
@@ -27,9 +45,11 @@ import { construirPagina } from '../../lib/paginacion.ts'
 import type { UsuarioActual } from '../../plugins/auth.ts'
 import { ErrorAplicacion } from '../../plugins/errores.ts'
 import { registrarOperacion } from '../bitacora/bitacora.service.ts'
+import { obtenerConductor } from '../conductores/conductores.service.ts'
 import { obtenerBodega } from '../configuracion/configuracion.service.ts'
 import { obtenerProveedorEnrutamiento } from '../enrutamiento/enrutamiento.service.ts'
 import type { ParadaOptimizable, RecorridoCalculado } from '../enrutamiento/proveedor.ts'
+import { crearNotificacion } from '../notificaciones/notificaciones.service.ts'
 import { obtenerVehiculo } from '../vehiculos/vehiculos.service.ts'
 
 /** Tiempo estimado de entrega en cada parada (descarga y firma), en segundos. */
@@ -195,6 +215,31 @@ export async function obtenerHistorial(id: number) {
     .orderBy(asc(rutaHistorialEstado.fechaHora))
 }
 
+/** Detalle de una ruta: coordinador/administrador ven cualquiera; el conductor solo la suya. */
+export async function verRuta(id: number, actor: UsuarioActual) {
+  if (actor.rol === 'conductor') await obtenerRutaDelConductor(id, actor)
+  return obtenerRuta(id)
+}
+
+/** Historial de una ruta: mismas reglas de acceso que {@link verRuta}. */
+export async function verHistorial(id: number, actor: UsuarioActual) {
+  if (actor.rol === 'conductor') await obtenerRutaDelConductor(id, actor)
+  return obtenerHistorial(id)
+}
+
+/** Rutas activas (no terminales) del conductor autenticado, para "Inicio" y "Mi ruta" de su app. */
+export async function misRutas(actor: UsuarioActual) {
+  const [c] = await db
+    .select({ id: conductor.id })
+    .from(conductor)
+    .where(eq(conductor.usuarioId, actor.sub))
+  if (!c) return []
+  const filas = await consultaResumen()
+    .where(and(eq(ruta.conductorId, c.id), notInArray(ruta.estado, [...ESTADOS_RUTA_TERMINALES])))
+    .orderBy(asc(ruta.fecha))
+  return filas.map(aResumen)
+}
+
 // ---------- Escritura ----------
 
 /** Siguiente código libre para la fecha: R-AAAAMMDD-NN a partir del mayor sufijo ya usado. */
@@ -226,6 +271,15 @@ async function validarVehiculo(vehiculoId: number | null | undefined) {
   const v = await obtenerVehiculo(vehiculoId)
   if (!v.activo) throw new ErrorAplicacion(400, 'El vehículo está desactivado.')
   return v
+}
+
+function validarCapacidad(cargaKg: number, vehiculoRuta: { placa: string; capacidadKg: number }) {
+  if (cargaKg > vehiculoRuta.capacidadKg) {
+    throw new ErrorAplicacion(
+      400,
+      `La carga (${cargaKg} kg) supera la capacidad del vehículo ${vehiculoRuta.placa} (${vehiculoRuta.capacidadKg} kg). Quite productos o elija otro vehículo.`,
+    )
+  }
 }
 
 export async function crearRuta(datos: CrearRutaInput, actor: UsuarioActual) {
@@ -519,11 +573,18 @@ export async function optimizarRuta(id: number, actor: UsuarioActual) {
 
 // ---------- Estados ----------
 
+type Tx = Parameters<Parameters<Db['transaction']>[0]>[0]
+
 export async function cambiarEstado(
   id: number,
   nuevo: EstadoRuta,
   actor: UsuarioActual,
-  extra: { nota?: string; campos?: Partial<typeof ruta.$inferInsert> } = {},
+  extra: {
+    nota?: string
+    campos?: Partial<typeof ruta.$inferInsert>
+    /** Efectos adicionales (ej. liberar/ocupar un conductor) dentro de la misma transacción. */
+    dentro?: (tx: Tx) => Promise<void>
+  } = {},
 ) {
   const [r] = await db
     .select({ estado: ruta.estado, codigo: ruta.codigo })
@@ -537,10 +598,18 @@ export async function cambiarEstado(
     )
   }
   await db.transaction(async (tx) => {
-    await tx
+    // Cierre optimista: si otra petición ya cambió el estado, no hay filas que actualizar.
+    const actualizada = await tx
       .update(ruta)
       .set({ estado: nuevo, ...extra.campos })
       .where(and(eq(ruta.id, id), eq(ruta.estado, r.estado)))
+      .returning({ id: ruta.id })
+    if (!actualizada.length) {
+      throw new ErrorAplicacion(
+        409,
+        `La ruta ${r.codigo} cambió de estado mientras se procesaba la solicitud. Intente de nuevo.`,
+      )
+    }
     await tx.insert(rutaHistorialEstado).values({
       rutaId: id,
       estadoAnterior: r.estado,
@@ -548,6 +617,7 @@ export async function cambiarEstado(
       usuarioId: actor.sub,
       nota: extra.nota ?? null,
     })
+    await extra.dentro?.(tx)
   })
   await registrarOperacion({
     usuarioId: actor.sub,
@@ -566,12 +636,7 @@ export async function planificarRuta(id: number, actor: UsuarioActual) {
     throw new ErrorAplicacion(400, 'La ruta debe tener al menos una parada.')
   if (!detalle.vehiculo)
     throw new ErrorAplicacion(400, 'Seleccione el vehículo de la ruta para validar su capacidad.')
-  if (detalle.cargaKg > detalle.vehiculo.capacidadKg) {
-    throw new ErrorAplicacion(
-      400,
-      `La carga (${detalle.cargaKg} kg) supera la capacidad del vehículo ${detalle.vehiculo.placa} (${detalle.vehiculo.capacidadKg} kg). Quite productos o elija otro vehículo.`,
-    )
-  }
+  validarCapacidad(detalle.cargaKg, detalle.vehiculo)
   const sinVerificar = detalle.paradas.filter((p) => !p.destino.ubicacionVerificada)
   if (sinVerificar.length) {
     throw new ErrorAplicacion(
@@ -592,17 +657,387 @@ export async function volverABorrador(id: number, actor: UsuarioActual) {
 }
 
 export async function cancelarRuta(id: number, motivo: string | undefined, actor: UsuarioActual) {
-  const r = await cambiarEstado(id, 'cancelada', actor, { nota: motivo })
-  // Si tenía conductor asignado, vuelve a estar disponible.
-  const [fila] = await db
-    .select({ conductorId: ruta.conductorId })
+  // Si tenía conductor asignado, vuelve a estar disponible y se le avisa. El conductor se relee
+  // dentro de la misma transacción (no antes) para no liberar/notificar a uno que ya fue reemplazado
+  // por una reasignación concurrente.
+  const [antes] = await db.select({ estado: ruta.estado }).from(ruta).where(eq(ruta.id, id))
+  const podriaLiberar = antes && antes.estado !== 'borrador' && antes.estado !== 'planificada'
+  let liberado: { usuarioId: number } | null = null
+  const r = await cambiarEstado(id, 'cancelada', actor, {
+    nota: motivo,
+    dentro: podriaLiberar
+      ? async (tx) => {
+          const [fila] = await tx
+            .select({ conductorId: ruta.conductorId })
+            .from(ruta)
+            .where(eq(ruta.id, id))
+          if (!fila?.conductorId) return
+          const [cond] = await tx
+            .select({ usuarioId: conductor.usuarioId })
+            .from(conductor)
+            .where(eq(conductor.id, fila.conductorId))
+          await tx
+            .update(conductor)
+            .set({ disponibilidad: 'disponible' })
+            .where(and(eq(conductor.id, fila.conductorId), eq(conductor.disponibilidad, 'en_ruta')))
+          if (cond) liberado = cond
+        }
+      : undefined,
+  })
+  // TS no reconoce que el closure de `dentro` puede reasignar `liberado` antes de este punto.
+  const conductorLiberado = liberado as { usuarioId: number } | null
+  if (conductorLiberado) {
+    await crearNotificacion({
+      usuarioId: conductorLiberado.usuarioId,
+      rutaId: id,
+      tipo: 'ruta_cancelada',
+      titulo: 'Ruta cancelada',
+      cuerpo: `Se canceló la ruta ${r.codigo}.`,
+    })
+  }
+  return obtenerRuta(id)
+}
+
+// ---------- Asignación y ciclo de vida del conductor (RF-15 … RF-21) ----------
+
+async function existeRutaActivaConductor(conductorId: number, fecha: string, exceptoId: number) {
+  const [r] = await db
+    .select({ id: ruta.id })
+    .from(ruta)
+    .where(
+      and(
+        eq(ruta.conductorId, conductorId),
+        eq(ruta.fecha, fecha),
+        ne(ruta.id, exceptoId),
+        notInArray(ruta.estado, [...ESTADOS_RUTA_TERMINALES]),
+      ),
+    )
+  return Boolean(r)
+}
+
+async function validarConductorAsignable(conductorId: number) {
+  const c = await obtenerConductor(conductorId)
+  if (!c.activo) throw new ErrorAplicacion(400, 'El conductor está desactivado.')
+  if (c.disponibilidad !== 'disponible')
+    throw new ErrorAplicacion(400, `El conductor ${c.nombre} no está disponible en este momento.`)
+  return c
+}
+
+/**
+ * Valida vehículo/capacidad y disponibilidad/conflicto de fecha del conductor: comunes a asignar
+ * y reasignar. Devuelve el vehículo a guardar y la ficha del conductor ya validado.
+ */
+async function validarAsignacion(
+  datos: { conductorId: number; vehiculoId?: number },
+  detalle: Awaited<ReturnType<typeof obtenerRuta>>,
+  exceptoRutaId: number,
+) {
+  const vehiculoId = datos.vehiculoId ?? detalle.vehiculo?.id
+  if (!vehiculoId)
+    throw new ErrorAplicacion(400, 'Seleccione el vehículo antes de asignar la ruta.')
+  const vehiculoRuta = datos.vehiculoId ? await validarVehiculo(datos.vehiculoId) : detalle.vehiculo
+  if (vehiculoRuta) validarCapacidad(detalle.cargaKg, vehiculoRuta)
+  const cond = await validarConductorAsignable(datos.conductorId)
+  if (await existeRutaActivaConductor(datos.conductorId, detalle.fecha, exceptoRutaId)) {
+    throw new ErrorAplicacion(
+      409,
+      `El conductor ${cond.nombre} ya tiene otra ruta activa el ${detalle.fecha}.`,
+    )
+  }
+  return { vehiculoId, cond }
+}
+
+/** RF-15: asigna conductor (y vehículo) a una ruta planificada; queda pendiente de aceptación. */
+export async function asignarRuta(id: number, datos: AsignarRutaInput, actor: UsuarioActual) {
+  const detalle = await obtenerRuta(id)
+  const { vehiculoId, cond } = await validarAsignacion(datos, detalle, id)
+  await cambiarEstado(id, 'pendiente_aceptacion', actor, {
+    campos: {
+      conductorId: cond.id,
+      vehiculoId,
+      asignadaEn: new Date(),
+      aceptadaEn: null,
+      motivoRechazo: null,
+    },
+    dentro: async (tx) => {
+      await tx.update(conductor).set({ disponibilidad: 'en_ruta' }).where(eq(conductor.id, cond.id))
+    },
+  })
+  await crearNotificacion({
+    usuarioId: cond.usuarioId as number,
+    rutaId: id,
+    tipo: 'ruta_asignada',
+    titulo: 'Ruta asignada',
+    cuerpo: `Te asignaron la ruta ${detalle.codigo} del ${detalle.fecha}.`,
+  })
+  await registrarOperacion({
+    usuarioId: actor.sub,
+    accion: 'asignar',
+    entidad: 'ruta',
+    entidadId: id,
+    descripcion: `Asignó la ruta ${detalle.codigo} al conductor ${cond.nombre}`,
+  })
+  return obtenerRuta(id)
+}
+
+/** RF-17: reasigna a otro conductor una ruta pendiente de aceptación o ya asignada. */
+export async function reasignarRuta(id: number, datos: ReasignarRutaInput, actor: UsuarioActual) {
+  const [r] = await db
+    .select({
+      estado: ruta.estado,
+      codigo: ruta.codigo,
+      fecha: ruta.fecha,
+      conductorId: ruta.conductorId,
+    })
     .from(ruta)
     .where(eq(ruta.id, id))
-  if (fila?.conductorId && r.estado !== 'borrador' && r.estado !== 'planificada') {
-    await db
-      .update(conductor)
-      .set({ disponibilidad: 'disponible' })
-      .where(and(eq(conductor.id, fila.conductorId), eq(conductor.disponibilidad, 'en_ruta')))
+  if (!r) throw new ErrorAplicacion(404, 'La ruta no existe.')
+  if (r.estado !== 'pendiente_aceptacion' && r.estado !== 'asignada') {
+    throw new ErrorAplicacion(
+      409,
+      `La ruta ${r.codigo} está en estado "${ETIQUETAS_ESTADO_RUTA[r.estado]}" y no se puede reasignar.`,
+    )
   }
+  // Cambiar de conductor sin cambiar de estado (pendiente_aceptacion) no es una transición formal;
+  // dejar "asignada" para volver a "pendiente_aceptacion" sí lo es y se valida contra TRANSICIONES_RUTA.
+  if (r.estado === 'asignada' && !puedeTransicionar(r.estado, 'pendiente_aceptacion', actor.rol)) {
+    throw new ErrorAplicacion(403, 'No tiene permisos para reasignar esta ruta.')
+  }
+  if (r.conductorId === datos.conductorId)
+    throw new ErrorAplicacion(400, 'El conductor ya tiene asignada esta ruta.')
+  const detalle = await obtenerRuta(id)
+  const { vehiculoId, cond } = await validarAsignacion(datos, detalle, id)
+  await db.transaction(async (tx) => {
+    const actualizado = await tx
+      .update(ruta)
+      .set({
+        conductorId: cond.id,
+        vehiculoId,
+        estado: 'pendiente_aceptacion',
+        asignadaEn: new Date(),
+        aceptadaEn: null,
+        motivoRechazo: null,
+      })
+      .where(and(eq(ruta.id, id), eq(ruta.estado, r.estado)))
+      .returning({ id: ruta.id })
+    if (!actualizado.length)
+      throw new ErrorAplicacion(409, 'La ruta cambió de estado mientras se reasignaba.')
+    await tx.insert(rutaHistorialEstado).values({
+      rutaId: id,
+      estadoAnterior: r.estado,
+      estadoNuevo: 'pendiente_aceptacion',
+      usuarioId: actor.sub,
+      nota: `Reasignada al conductor ${cond.nombre}`,
+    })
+    if (r.conductorId) {
+      await tx
+        .update(conductor)
+        .set({ disponibilidad: 'disponible' })
+        .where(and(eq(conductor.id, r.conductorId), eq(conductor.disponibilidad, 'en_ruta')))
+    }
+    await tx.update(conductor).set({ disponibilidad: 'en_ruta' }).where(eq(conductor.id, cond.id))
+  })
+  await crearNotificacion({
+    usuarioId: cond.usuarioId as number,
+    rutaId: id,
+    tipo: 'ruta_reasignada',
+    titulo: 'Ruta reasignada',
+    cuerpo: `Te asignaron la ruta ${r.codigo} del ${r.fecha}.`,
+  })
+  await registrarOperacion({
+    usuarioId: actor.sub,
+    accion: 'asignar',
+    entidad: 'ruta',
+    entidadId: id,
+    descripcion: `Reasignó la ruta ${r.codigo} al conductor ${cond.nombre}`,
+  })
+  return obtenerRuta(id)
+}
+
+async function obtenerRutaDelConductor(id: number, actor: UsuarioActual) {
+  const [c] = await db
+    .select({ id: conductor.id, nombre: conductor.nombre })
+    .from(conductor)
+    .where(eq(conductor.usuarioId, actor.sub))
+  if (!c) throw new ErrorAplicacion(403, 'Su usuario no tiene una ficha de conductor asociada.')
+  const [r] = await db
+    .select({ estado: ruta.estado, codigo: ruta.codigo, conductorId: ruta.conductorId })
+    .from(ruta)
+    .where(eq(ruta.id, id))
+  if (!r) throw new ErrorAplicacion(404, 'La ruta no existe.')
+  if (r.conductorId !== c.id) throw new ErrorAplicacion(403, 'Esta ruta no está asignada a usted.')
+  return { ...r, conductor: c }
+}
+
+/** RF-16 (aceptación): el conductor acepta la ruta que le asignaron. */
+export async function aceptarRuta(id: number, actor: UsuarioActual) {
+  const r = await obtenerRutaDelConductor(id, actor)
+  await cambiarEstado(id, 'asignada', actor, { campos: { aceptadaEn: new Date() } })
+  await registrarOperacion({
+    usuarioId: actor.sub,
+    accion: 'cambiar_estado',
+    entidad: 'ruta',
+    entidadId: id,
+    descripcion: `El conductor ${r.conductor.nombre} aceptó la ruta ${r.codigo}`,
+  })
+  return obtenerRuta(id)
+}
+
+/** RF-18: el conductor rechaza la ruta; vuelve a planificada para que el coordinador reasigne. */
+export async function rechazarRuta(id: number, datos: RechazarRutaInput, actor: UsuarioActual) {
+  const r = await obtenerRutaDelConductor(id, actor)
+  const [fila] = await db.select({ creadoPor: ruta.creadoPor }).from(ruta).where(eq(ruta.id, id))
+  await cambiarEstado(id, 'planificada', actor, {
+    nota: datos.motivo,
+    campos: { conductorId: null, asignadaEn: null, motivoRechazo: datos.motivo },
+    dentro: async (tx) => {
+      await tx
+        .update(conductor)
+        .set({ disponibilidad: 'disponible' })
+        .where(eq(conductor.id, r.conductor.id))
+    },
+  })
+  if (fila?.creadoPor) {
+    await crearNotificacion({
+      usuarioId: fila.creadoPor,
+      rutaId: id,
+      tipo: 'ruta_rechazada',
+      titulo: 'Ruta rechazada',
+      cuerpo: `${r.conductor.nombre} rechazó la ruta ${r.codigo}: ${datos.motivo}`,
+    })
+  }
+  await registrarOperacion({
+    usuarioId: actor.sub,
+    accion: 'cambiar_estado',
+    entidad: 'ruta',
+    entidadId: id,
+    descripcion: `El conductor ${r.conductor.nombre} rechazó la ruta ${r.codigo}: ${datos.motivo}`,
+  })
+  return obtenerRuta(id)
+}
+
+/** El conductor inicia el recorrido. */
+export async function iniciarRuta(id: number, actor: UsuarioActual) {
+  const r = await obtenerRutaDelConductor(id, actor)
+  await cambiarEstado(id, 'en_curso', actor, { campos: { iniciadaEn: new Date() } })
+  await registrarOperacion({
+    usuarioId: actor.sub,
+    accion: 'cambiar_estado',
+    entidad: 'ruta',
+    entidadId: id,
+    descripcion: `El conductor ${r.conductor.nombre} inició la ruta ${r.codigo}`,
+  })
+  return obtenerRuta(id)
+}
+
+async function obtenerParadaDeRutaEnCurso(id: number, paradaId: number, actor: UsuarioActual) {
+  const r = await obtenerRutaDelConductor(id, actor)
+  if (r.estado !== 'en_curso')
+    throw new ErrorAplicacion(409, `La ruta ${r.codigo} no está en curso.`)
+  const [p] = await db
+    .select({ id: rutaParada.id, estadoEntrega: rutaParada.estadoEntrega })
+    .from(rutaParada)
+    .where(and(eq(rutaParada.id, paradaId), eq(rutaParada.rutaId, id)))
+  if (!p) throw new ErrorAplicacion(404, 'La parada no existe en esta ruta.')
+  if (p.estadoEntrega !== 'pendiente')
+    throw new ErrorAplicacion(409, 'Esta parada ya fue registrada.')
+  return r
+}
+
+/** RF-20: el conductor marca una parada como entregada. */
+export async function entregarParada(id: number, paradaId: number, actor: UsuarioActual) {
+  const r = await obtenerParadaDeRutaEnCurso(id, paradaId, actor)
+  await db.transaction(async (tx) => {
+    const actualizada = await tx
+      .update(rutaParada)
+      .set({ estadoEntrega: 'entregada', horaConfirmacion: new Date() })
+      .where(and(eq(rutaParada.id, paradaId), eq(rutaParada.estadoEntrega, 'pendiente')))
+      .returning({ id: rutaParada.id })
+    if (!actualizada.length) throw new ErrorAplicacion(409, 'Esta parada ya fue registrada.')
+    await tx.insert(rutaHistorialEstado).values({
+      rutaId: id,
+      paradaId,
+      estadoAnterior: 'pendiente',
+      estadoNuevo: 'entregada',
+      usuarioId: actor.sub,
+    })
+  })
+  await registrarOperacion({
+    usuarioId: actor.sub,
+    accion: 'cambiar_estado',
+    entidad: 'ruta',
+    entidadId: id,
+    descripcion: `Parada entregada en la ruta ${r.codigo}`,
+  })
+  return obtenerRuta(id)
+}
+
+/** RF-20: el conductor reporta una novedad (no pudo entregar) en una parada. */
+export async function fallarParada(
+  id: number,
+  paradaId: number,
+  datos: FallarParadaInput,
+  actor: UsuarioActual,
+) {
+  const r = await obtenerParadaDeRutaEnCurso(id, paradaId, actor)
+  await db.transaction(async (tx) => {
+    const actualizada = await tx
+      .update(rutaParada)
+      .set({
+        estadoEntrega: 'fallida',
+        horaConfirmacion: new Date(),
+        novedadTipo: datos.tipo,
+        novedadNota: datos.nota ?? null,
+      })
+      .where(and(eq(rutaParada.id, paradaId), eq(rutaParada.estadoEntrega, 'pendiente')))
+      .returning({ id: rutaParada.id })
+    if (!actualizada.length) throw new ErrorAplicacion(409, 'Esta parada ya fue registrada.')
+    await tx.insert(rutaHistorialEstado).values({
+      rutaId: id,
+      paradaId,
+      estadoAnterior: 'pendiente',
+      estadoNuevo: 'fallida',
+      usuarioId: actor.sub,
+      nota: datos.nota ?? null,
+    })
+  })
+  await registrarOperacion({
+    usuarioId: actor.sub,
+    accion: 'cambiar_estado',
+    entidad: 'ruta',
+    entidadId: id,
+    descripcion: `Novedad (${datos.tipo}) en una parada de la ruta ${r.codigo}`,
+  })
+  return obtenerRuta(id)
+}
+
+/** RF-21: el conductor finaliza la ruta; queda completada o incompleta según las paradas. */
+export async function finalizarRuta(id: number, actor: UsuarioActual) {
+  const r = await obtenerRutaDelConductor(id, actor)
+  if (r.estado !== 'en_curso')
+    throw new ErrorAplicacion(409, `La ruta ${r.codigo} no está en curso.`)
+  const paradas = await db
+    .select({ estadoEntrega: rutaParada.estadoEntrega })
+    .from(rutaParada)
+    .where(eq(rutaParada.rutaId, id))
+  if (paradas.some((p) => p.estadoEntrega === 'pendiente'))
+    throw new ErrorAplicacion(400, 'Aún hay paradas pendientes por registrar.')
+  const nuevo = paradas.every((p) => p.estadoEntrega === 'entregada') ? 'completada' : 'incompleta'
+  await cambiarEstado(id, nuevo, actor, {
+    campos: { finalizadaEn: new Date() },
+    dentro: async (tx) => {
+      await tx
+        .update(conductor)
+        .set({ disponibilidad: 'disponible' })
+        .where(eq(conductor.id, r.conductor.id))
+    },
+  })
+  await registrarOperacion({
+    usuarioId: actor.sub,
+    accion: 'cambiar_estado',
+    entidad: 'ruta',
+    entidadId: id,
+    descripcion: `El conductor ${r.conductor.nombre} finalizó la ruta ${r.codigo} (${nuevo})`,
+  })
   return obtenerRuta(id)
 }
