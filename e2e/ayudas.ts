@@ -1,6 +1,7 @@
 import { expect, type Page } from '@playwright/test'
 
 export const ADMIN_FIJO = { correo: 'e2e-admin-fijo@lh.test', contrasena: 'Fijo12345' }
+export const CONDUCTOR_FIJO = { correo: 'e2e-conductor-fijo@lh.test', contrasena: 'Fijo12345' }
 
 export async function ingresar(page: Page, correo: string, contrasena: string) {
   await page.goto('/ingresar')

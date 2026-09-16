@@ -43,6 +43,15 @@ export type DisponibilidadConductor = (typeof DISPONIBILIDAD_CONDUCTOR)[number]
 export const UNIDADES_MEDIDA = ['unidad', 'caja', 'paquete', 'kg', 'litro'] as const
 export type UnidadMedida = (typeof UNIDADES_MEDIDA)[number]
 
+/** Tipos de notificación interna por cambios en una ruta (RF-19). */
+export const TIPOS_NOTIFICACION = [
+  'ruta_asignada',
+  'ruta_reasignada',
+  'ruta_rechazada',
+  'ruta_cancelada',
+] as const
+export type TipoNotificacion = (typeof TIPOS_NOTIFICACION)[number]
+
 /** Etiquetas en español para mostrar en la interfaz. */
 export const ETIQUETAS_ESTADO_RUTA: Record<EstadoRuta, string> = {
   borrador: 'Borrador',
@@ -65,4 +74,12 @@ export const ETIQUETAS_ESTADO_PARADA: Record<EstadoParada, string> = {
   pendiente: 'Pendiente',
   entregada: 'Entregada',
   fallida: 'Fallida',
+}
+
+export const ETIQUETAS_TIPO_NOVEDAD: Record<TipoNovedad, string> = {
+  cliente_ausente: 'Cliente ausente',
+  rechazo_mercancia: 'Rechazó la mercancía',
+  direccion_incorrecta: 'Dirección incorrecta',
+  devolucion_parcial: 'Devolución parcial',
+  otro: 'Otro',
 }

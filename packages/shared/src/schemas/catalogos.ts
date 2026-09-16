@@ -2,16 +2,12 @@ import { z } from 'zod'
 import { DISPONIBILIDAD_CONDUCTOR, UNIDADES_MEDIDA } from '../enums.ts'
 import { contrasenaSchema } from './auth.ts'
 import {
+  booleanoDeQuery,
   coordenadasColombiaSchema,
   coordenadasSchema,
   paginacionSchema,
   textoOpcional,
 } from './comunes.ts'
-
-const booleanoDeQuery = z
-  .enum(['true', 'false'])
-  .transform((v) => v === 'true')
-  .optional()
 
 /** Filtros comunes de los catálogos: búsqueda, paginación y estado. */
 export const listarCatalogoSchema = paginacionSchema.extend({ activo: booleanoDeQuery })

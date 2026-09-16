@@ -4,13 +4,7 @@ import { MenuUsuario } from './menu-usuario'
 
 const pestanas = [
   { to: '/conductor' as const, etiqueta: 'Inicio', icono: Home, exact: true },
-  {
-    to: '/conductor' as const,
-    etiqueta: 'Mi ruta',
-    icono: RouteIcon,
-    exact: true,
-    deshabilitado: true,
-  },
+  { to: '/conductor/ruta' as const, etiqueta: 'Mi ruta', icono: RouteIcon, exact: true },
   { to: '/conductor/cuenta' as const, etiqueta: 'Cuenta', icono: UserRound, exact: false },
 ]
 
@@ -29,29 +23,17 @@ export function ConductorShell() {
         className="fixed inset-x-0 bottom-0 grid grid-cols-3 border-t bg-card pb-[env(safe-area-inset-bottom)]"
         aria-label="Navegación principal"
       >
-        {pestanas.map((p) =>
-          p.deshabilitado ? (
-            <span
-              key={p.etiqueta}
-              className="flex flex-col items-center gap-1 py-2 text-xs text-muted-foreground/50"
-              aria-disabled="true"
-              title="Disponible cuando tenga una ruta asignada"
-            >
-              <p.icono className="size-5" aria-hidden="true" />
-              {p.etiqueta}
-            </span>
-          ) : (
-            <Link
-              key={p.etiqueta}
-              to={p.to}
-              activeOptions={{ exact: p.exact }}
-              className="flex flex-col items-center gap-1 py-2 text-xs text-muted-foreground [&.active]:text-primary"
-            >
-              <p.icono className="size-5" aria-hidden="true" />
-              {p.etiqueta}
-            </Link>
-          ),
-        )}
+        {pestanas.map((p) => (
+          <Link
+            key={p.etiqueta}
+            to={p.to}
+            activeOptions={{ exact: p.exact }}
+            className="flex flex-col items-center gap-1 py-2 text-xs text-muted-foreground [&.active]:text-primary"
+          >
+            <p.icono className="size-5" aria-hidden="true" />
+            {p.etiqueta}
+          </Link>
+        ))}
       </nav>
     </div>
   )

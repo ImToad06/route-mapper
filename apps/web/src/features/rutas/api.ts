@@ -1,8 +1,12 @@
 import type {
   ActualizarRutaInput,
+  AsignarRutaInput,
   CrearRutaInput,
+  FallarParadaInput,
   ListarRutasInput,
   ParadasRutaInput,
+  ReasignarRutaInput,
+  RechazarRutaInput,
 } from '@lh/shared'
 import { queryOptions } from '@tanstack/react-query'
 import { api, datosDe } from '@/lib/api'
@@ -44,3 +48,22 @@ export const planificarRuta = (id: number) => api.rutas({ id }).planificar.post(
 export const volverABorrador = (id: number) => api.rutas({ id }).borrador.post()
 export const cancelarRuta = (id: number, motivo?: string) =>
   api.rutas({ id }).cancelar.post({ motivo })
+export const asignarRuta = (id: number, d: AsignarRutaInput) => api.rutas({ id }).asignar.post(d)
+export const reasignarRuta = (id: number, d: ReasignarRutaInput) =>
+  api.rutas({ id }).reasignar.post(d)
+
+// ---------- App del conductor (RF-16 … RF-21) ----------
+
+export const misRutasQuery = queryOptions({
+  queryKey: [...claveRutas, 'mias'],
+  queryFn: () => datosDe(api.rutas.mias.get()),
+  staleTime: 15_000,
+})
+export const aceptarRuta = (id: number) => api.rutas({ id }).aceptar.post()
+export const rechazarRuta = (id: number, d: RechazarRutaInput) => api.rutas({ id }).rechazar.post(d)
+export const iniciarRuta = (id: number) => api.rutas({ id }).iniciar.post()
+export const finalizarRuta = (id: number) => api.rutas({ id }).finalizar.post()
+export const entregarParada = (id: number, paradaId: number) =>
+  api.rutas({ id }).paradas({ paradaId }).entregar.post()
+export const fallarParada = (id: number, paradaId: number, d: FallarParadaInput) =>
+  api.rutas({ id }).paradas({ paradaId }).fallar.post(d)

@@ -10,6 +10,7 @@ import { conductoresController } from './modules/conductores/conductores.control
 import { configuracionController } from './modules/configuracion/configuracion.controller.ts'
 import { destinosController } from './modules/destinos/destinos.controller.ts'
 import { geocodificacionController } from './modules/geocodificacion/geocodificacion.controller.ts'
+import { notificacionesController } from './modules/notificaciones/notificaciones.controller.ts'
 import { productosController } from './modules/productos/productos.controller.ts'
 import { rutasController } from './modules/rutas/rutas.controller.ts'
 import { saludController } from './modules/salud/salud.controller.ts'
@@ -48,5 +49,6 @@ export const app = new Elysia({ prefix: '/api' })
   .use(geocodificacionController)
   .use(configuracionController)
   .use(rutasController)
+  .use(notificacionesController)
 
 export type App = typeof app

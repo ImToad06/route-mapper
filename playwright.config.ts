@@ -21,6 +21,7 @@ export default defineConfig({
   projects: [
     {
       name: 'escritorio',
+      testIgnore: /movil\.spec\.ts/,
       use: {
         ...devices['Desktop Chrome'],
         // WebGL por software para que MapLibre dibuje las teselas en el navegador sin GPU.

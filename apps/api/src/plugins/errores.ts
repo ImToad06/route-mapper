@@ -22,6 +22,7 @@ const MENSAJES_UNICOS: Record<string, string> = {
   producto_codigo_unique: 'Ya existe un producto con ese código.',
   zona_nombre_unique: 'Ya existe una zona con ese nombre.',
   ruta_codigo_unique: 'Ya existe una ruta con ese código.',
+  ruta_conductor_fecha_activa_idx: 'El conductor ya tiene otra ruta activa ese día.',
 }
 
 function errorDeUnicidad(error: unknown): string | null {

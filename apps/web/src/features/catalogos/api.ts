@@ -37,6 +37,17 @@ export const conductoresQuery = (f: ListarConductoresInput) =>
     queryKey: [...claves.conductores, f],
     queryFn: () => datosDe(api.conductores.get({ query: f })),
   })
+/** Conductores activos y disponibles, para el diálogo de asignación de rutas. */
+export const conductoresDisponiblesQuery = queryOptions({
+  queryKey: [...claves.conductores, 'disponibles'],
+  queryFn: () =>
+    datosDe(
+      api.conductores.get({
+        query: { pagina: 1, porPagina: 100, activo: true, disponibilidad: 'disponible' },
+      }),
+    ),
+  staleTime: 15_000,
+})
 export const crearConductor = (d: CrearConductorInput) => api.conductores.post(d)
 export const actualizarConductor = (id: number, d: ActualizarConductorInput) =>
   api.conductores({ id }).patch(d)

@@ -2,6 +2,15 @@ import { z } from 'zod'
 
 export const idSchema = z.coerce.number().int().positive()
 
+/**
+ * Booleano de query string ("true"/"false"): `z.coerce.boolean()` no sirve aquí porque
+ * `Boolean('false')` es `true` (cualquier cadena no vacía es verdadera).
+ */
+export const booleanoDeQuery = z
+  .enum(['true', 'false'])
+  .transform((v) => v === 'true')
+  .optional()
+
 export const paginacionSchema = z.object({
   pagina: z.coerce.number().int().min(1).default(1),
   porPagina: z.coerce.number().int().min(1).max(100).default(20),
