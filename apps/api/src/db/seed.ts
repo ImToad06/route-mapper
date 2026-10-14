@@ -31,6 +31,28 @@ await db
   .onConflictDoNothing()
 
 await db
+  .insert(configuracion)
+  .values([
+    {
+      clave: 'bodega.direccion',
+      valor: 'Vía 40 # 73-290, Barranquilla',
+      descripcion: 'Dirección de la bodega (inicio y fin de cada ruta)',
+    },
+    { clave: 'bodega.latitud', valor: '11.0053', descripcion: 'Latitud de la bodega' },
+    { clave: 'bodega.longitud', valor: '-74.7936', descripcion: 'Longitud de la bodega' },
+  ])
+  .onConflictDoNothing()
+
+// SEED_SOLO_BASE=true (producción): solo roles, administrador y configuración, sin datos de ejemplo.
+if (process.env.SEED_SOLO_BASE === 'true') {
+  console.log(
+    `Seed base aplicado. Administrador: ${ADMIN_CORREO} (debe cambiar la contraseña al ingresar).`,
+  )
+  await sql.end()
+  process.exit(0)
+}
+
+await db
   .insert(vehiculo)
   .values([
     { placa: 'TAB123', tipo: 'Camión NHR', capacidadKg: '1800' },
@@ -186,19 +208,6 @@ if ((conteoDestinos?.total ?? 0) === 0) {
     },
   ])
 }
-
-await db
-  .insert(configuracion)
-  .values([
-    {
-      clave: 'bodega.direccion',
-      valor: 'Vía 40 # 73-290, Barranquilla',
-      descripcion: 'Dirección de la bodega (inicio y fin de cada ruta)',
-    },
-    { clave: 'bodega.latitud', valor: '11.0053', descripcion: 'Latitud de la bodega' },
-    { clave: 'bodega.longitud', valor: '-74.7936', descripcion: 'Longitud de la bodega' },
-  ])
-  .onConflictDoNothing()
 
 console.log(
   `Seed aplicado. Administrador: ${ADMIN_CORREO} / ${ADMIN_CONTRASENA} (debe cambiarla al ingresar).`,

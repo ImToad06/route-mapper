@@ -15,7 +15,7 @@
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "typecheck": "bun run --filter '*' typecheck",
-    "test": "bun run --filter '*' test",
+    "test": "bun run --filter '*' test && bun test docs/piloto",
     "db:generate": "bun run --filter @lh/api db:generate",
     "db:migrate": "bun run --filter @lh/api db:migrate",
     "db:seed": "bun run --filter @lh/api db:seed",
