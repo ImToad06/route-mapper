@@ -66,7 +66,7 @@ services:
   - type: web
     name: lh-rutas-web
     runtime: static
-    buildCommand: npm install -g bun && bun install --frozen-lockfile --ignore-scripts && cd apps/web && bun run build
+    buildCommand: bun install --frozen-lockfile --ignore-scripts && cd apps/web && bun run build
     staticPublishPath: apps/web/dist
     routes:
       # El navegador habla siempre con este mismo dominio (la cookie de sesión lo exige); Render reenvía /api a la API.
