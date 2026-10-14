@@ -7,7 +7,7 @@ export async function ingresar(page: Page, correo: string, contrasena: string) {
   await page.goto('/ingresar')
   await page.getByLabel('Correo').fill(correo)
   await page.getByLabel('Contraseña').fill(contrasena)
-  await page.getByRole('button', { name: 'Ingresar' }).click()
+  await page.getByRole('button', { name: 'Iniciar Sesión' }).click()
   await expect(page).not.toHaveURL(/\/ingresar$/)
 }
 

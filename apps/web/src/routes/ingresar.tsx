@@ -117,11 +117,11 @@ function Ingresar() {
                           @lhdistribuciones.com
                         </span>
                       </FormLabel>
-                      <FormControl>
-                        <div className="relative flex items-center">
-                          <span className="absolute left-3 text-muted-foreground pointer-events-none">
-                            <BadgeCheck className="size-4" />
-                          </span>
+                      <div className="relative flex items-center">
+                        <span className="absolute left-3 text-muted-foreground pointer-events-none">
+                          <BadgeCheck className="size-4" />
+                        </span>
+                        <FormControl>
                           <Input
                             type="email"
                             autoComplete="username"
@@ -130,8 +130,8 @@ function Ingresar() {
                             className="pl-9 h-11 rounded-xl bg-muted/50 border-input font-medium"
                             {...field}
                           />
-                        </div>
-                      </FormControl>
+                        </FormControl>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -147,11 +147,11 @@ function Ingresar() {
                           ¿Olvidó su contraseña?
                         </span>
                       </div>
-                      <FormControl>
-                        <div className="relative flex items-center">
-                          <span className="absolute left-3 text-muted-foreground pointer-events-none">
-                            <Lock className="size-4" />
-                          </span>
+                      <div className="relative flex items-center">
+                        <span className="absolute left-3 text-muted-foreground pointer-events-none">
+                          <Lock className="size-4" />
+                        </span>
+                        <FormControl>
                           <Input
                             type={verPassword ? 'text' : 'password'}
                             autoComplete="current-password"
@@ -159,19 +159,15 @@ function Ingresar() {
                             className="pl-9 pr-10 h-11 rounded-xl bg-muted/50 border-input font-medium"
                             {...field}
                           />
-                          <button
-                            type="button"
-                            onClick={() => setVerPassword(!verPassword)}
-                            className="absolute right-3 text-muted-foreground hover:text-foreground transition-colors"
-                          >
-                            {verPassword ? (
-                              <EyeOff className="size-4" />
-                            ) : (
-                              <Eye className="size-4" />
-                            )}
-                          </button>
-                        </div>
-                      </FormControl>
+                        </FormControl>
+                        <button
+                          type="button"
+                          onClick={() => setVerPassword(!verPassword)}
+                          className="absolute right-3 text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          {verPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                        </button>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
