@@ -20,3 +20,4 @@ e2e/.auth/
 .gemini/
 .opencode/
 query
+infra/demo/demo.dump
