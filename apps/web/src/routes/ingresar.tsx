@@ -19,6 +19,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { api, mensajeDeError } from '@/lib/api'
 import { useAuth } from '@/lib/auth-store'
+import { cerrarSesion } from '@/lib/sesion'
 
 /** Solo se acepta una ruta interna como destino de retorno. */
 const rutaInterna = z
@@ -26,6 +27,18 @@ const rutaInterna = z
   .regex(/^\/(?!\/)/)
   .optional()
   .catch(undefined)
+
+type Perfil = 'coordinador' | 'transportista'
+const CLAVE_PERFIL = 'lh_perfil_ingreso'
+
+/** Último perfil usado en este navegador (el conductor no tiene que cambiarlo en cada ingreso). */
+function perfilGuardado(): Perfil {
+  try {
+    return localStorage.getItem(CLAVE_PERFIL) === 'transportista' ? 'transportista' : 'coordinador'
+  } catch {
+    return 'coordinador'
+  }
+}
 
 export const Route = createFileRoute('/ingresar')({
   validateSearch: z.object({ volverA: rutaInterna }),
@@ -39,7 +52,8 @@ function Ingresar() {
   const navigate = useNavigate()
   const { volverA } = Route.useSearch()
   const fijarSesion = useAuth((s) => s.fijarSesion)
-  const [perfil, setPerfil] = useState<'coordinador' | 'transportista'>('coordinador')
+  const [perfil, setPerfil] = useState<Perfil>(perfilGuardado)
+  const [ayudaClave, setAyudaClave] = useState(false)
   const [verPassword, setVerPassword] = useState(false)
 
   const form = useForm<LoginInput>({
@@ -54,6 +68,23 @@ function Ingresar() {
       form.setValue('contrasena', '')
       return
     }
+    // El perfil elegido debe corresponder a la cuenta: así un conductor no entra por error al panel
+    // ni un coordinador a la app móvil. Si no coincide se cierra la sesión recién abierta.
+    const perfilReal: Perfil = data.usuario.rol === 'conductor' ? 'transportista' : 'coordinador'
+    if (perfilReal !== perfil) {
+      await cerrarSesion()
+      setPerfil(perfilReal)
+      toast.error(
+        perfilReal === 'transportista'
+          ? 'Esta cuenta es de conductor. Cambié el perfil a Transportista; vuelva a pulsar Iniciar Sesión.'
+          : 'Esta cuenta es de coordinación. Cambié el perfil a Coordinador; vuelva a pulsar Iniciar Sesión.',
+      )
+      form.setValue('contrasena', '')
+      return
+    }
+    try {
+      localStorage.setItem(CLAVE_PERFIL, perfil)
+    } catch {}
     fijarSesion(data.usuario, data.tokenAcceso)
     toast.success(`Bienvenido, ${data.usuario.nombre}`)
     await navigate({ to: (volverA ?? '/') as '/' })
@@ -88,6 +119,7 @@ function Ingresar() {
               <div className="grid grid-cols-2 gap-2 p-1 bg-muted rounded-xl">
                 <button
                   type="button"
+                  aria-pressed={perfil === 'coordinador'}
                   onClick={() => setPerfil('coordinador')}
                   className={`flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${perfil === 'coordinador' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                 >
@@ -95,6 +127,7 @@ function Ingresar() {
                 </button>
                 <button
                   type="button"
+                  aria-pressed={perfil === 'transportista'}
                   onClick={() => setPerfil('transportista')}
                   className={`flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${perfil === 'transportista' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                 >
@@ -143,10 +176,26 @@ function Ingresar() {
                     <FormItem>
                       <div className="flex items-center justify-between">
                         <FormLabel className="font-semibold">Contraseña</FormLabel>
-                        <span className="text-xs text-secondary hover:underline cursor-pointer">
+                        <button
+                          type="button"
+                          aria-expanded={ayudaClave}
+                          aria-controls="ayuda-clave"
+                          onClick={() => setAyudaClave((v) => !v)}
+                          className="text-xs text-secondary hover:underline"
+                        >
                           ¿Olvidó su contraseña?
-                        </span>
+                        </button>
                       </div>
+                      {ayudaClave && (
+                        <p
+                          id="ayuda-clave"
+                          className="rounded-lg bg-muted/60 p-3 text-xs text-muted-foreground"
+                        >
+                          Pida al administrador del sistema que restablezca su contraseña. Recibirá
+                          una contraseña temporal y el sistema le pedirá crear una nueva al
+                          ingresar.
+                        </p>
+                      )}
                       <div className="relative flex items-center">
                         <span className="absolute left-3 text-muted-foreground pointer-events-none">
                           <Lock className="size-4" />

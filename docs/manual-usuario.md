@@ -16,14 +16,18 @@ Las imágenes se generan con datos de demostración (`docs/manual/capturas.spec.
 ## 2. Ingresar
 
 1. Abra la dirección del sistema en el navegador (Chrome, Firefox, Edge o Safari).
-2. Escriba su correo y contraseña y pulse **Iniciar Sesión**.
-3. Si es su primer ingreso o le restablecieron la contraseña, el sistema le pide crear una nueva antes de seguir.
-4. Para salir: menú con su nombre (arriba a la derecha) → **Cerrar sesión**.
+2. Elija su **perfil**: *Coordinador* (administradores y coordinadores, panel de despacho) o *Transportista*
+   (conductores, app móvil). El sistema recuerda el último que usó en ese navegador.
+3. Escriba su correo y contraseña y pulse **Iniciar Sesión**. Si el perfil no corresponde a su cuenta, el sistema
+   no la abre, corrige el perfil y le pide pulsar **Iniciar Sesión** otra vez.
+4. Si es su primer ingreso o le restablecieron la contraseña, el sistema le pide crear una nueva antes de seguir.
+5. Para salir: menú con su nombre (arriba a la derecha) → **Cerrar sesión**.
 
 ![Pantalla de ingreso](manual/img/01-ingreso.png)
 
 - Después de 10 intentos fallidos desde un mismo equipo hay que esperar 15 minutos.
-- Si olvidó la contraseña, pídale al administrador que la restablezca; el sistema le dará una temporal.
+- Si olvidó la contraseña, pulse **¿Olvidó su contraseña?**: el sistema le recuerda que debe pedirle al
+  administrador que la restablezca; recibirá una temporal y tendrá que crear una nueva al ingresar.
 
 ## 3. Inicio del panel
 

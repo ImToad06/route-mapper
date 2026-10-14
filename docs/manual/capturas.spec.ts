@@ -7,8 +7,9 @@ import { expect, type Page, test } from '@playwright/test'
  */
 const DIR = 'docs/manual/img/' // relativo a la raíz del repo, desde donde se ejecuta
 
-async function entrar(page: Page, correo: string, clave: string) {
+async function entrar(page: Page, correo: string, clave: string, perfil = 'Coordinador') {
   await page.goto('/ingresar')
+  await page.getByRole('button', { name: perfil }).click()
   await page.getByLabel('Correo').fill(correo)
   await page.getByLabel('Contraseña').fill(clave)
   await page.getByRole('button', { name: 'Iniciar Sesión' }).click()
@@ -69,7 +70,7 @@ test.describe('app del conductor', () => {
   test.use({ viewport: { width: 412, height: 860 }, hasTouch: true, isMobile: true })
 
   test('inicio y mi ruta', async ({ page }) => {
-    await entrar(page, 'carlos.perez@lh.demo', 'Conductor12345')
+    await entrar(page, 'carlos.perez@lh.demo', 'Conductor12345', 'Transportista')
     await capturar(page, '14-conductor-inicio')
     await page.goto('/conductor/ruta')
     await capturar(page, '15-conductor-ruta', 2500)

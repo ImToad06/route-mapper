@@ -8,7 +8,7 @@ import { CONDUCTOR_FIJO, capturar, ingresar } from './ayudas'
 test.describe
   .serial('app del conductor', () => {
     test('aceptar la ruta pendiente desde Inicio', async ({ page }) => {
-      await ingresar(page, CONDUCTOR_FIJO.correo, CONDUCTOR_FIJO.contrasena)
+      await ingresar(page, CONDUCTOR_FIJO.correo, CONDUCTOR_FIJO.contrasena, 'transportista')
       await expect(page).toHaveURL(/\/conductor$/)
       await expect(page.getByText(/^R-20310520-\d+$/)).toBeVisible()
       await expect(page.getByText('pendiente de aceptación')).toBeVisible()
@@ -21,7 +21,7 @@ test.describe
     })
 
     test('iniciar, entregar las paradas y finalizar desde Mi ruta', async ({ page }) => {
-      await ingresar(page, CONDUCTOR_FIJO.correo, CONDUCTOR_FIJO.contrasena)
+      await ingresar(page, CONDUCTOR_FIJO.correo, CONDUCTOR_FIJO.contrasena, 'transportista')
       await page.getByRole('link', { name: 'Mi ruta' }).click()
       await expect(page).toHaveURL(/\/conductor\/ruta$/)
       await expect(page.getByText(/^R-20310520-\d+$/)).toBeVisible()

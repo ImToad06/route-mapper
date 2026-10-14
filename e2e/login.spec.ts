@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { ADMIN_FIJO, CONDUCTOR_FIJO } from './ayudas'
 
 const ADMIN = { correo: 'e2e-admin@lh.test', contrasena: 'Admin1234', nueva: 'Nueva12345' }
 
@@ -74,3 +75,43 @@ test.describe
       await expect(page).toHaveURL(/\/ingresar/)
     })
   })
+
+test.describe('perfil de ingreso y ayuda de contraseña', () => {
+  test('¿Olvidó su contraseña? explica cómo recuperarla', async ({ page }) => {
+    await page.goto('/ingresar')
+    const enlace = page.getByRole('button', { name: '¿Olvidó su contraseña?' })
+    await expect(enlace).toHaveAttribute('aria-expanded', 'false')
+    await enlace.click()
+    await expect(enlace).toHaveAttribute('aria-expanded', 'true')
+    await expect(page.getByText(/Pida al administrador del sistema/)).toBeVisible()
+  })
+
+  test('un conductor con el perfil Coordinador no entra y el selector se corrige', async ({
+    page,
+  }) => {
+    await page.goto('/ingresar')
+    await page.getByLabel('Correo').fill(CONDUCTOR_FIJO.correo)
+    await page.getByLabel('Contraseña').fill(CONDUCTOR_FIJO.contrasena)
+    await page.getByRole('button', { name: 'Iniciar Sesión' }).click()
+    await expect(page.getByText(/Esta cuenta es de conductor/)).toBeVisible()
+    await expect(page).toHaveURL(/\/ingresar$/)
+    await expect(page.getByRole('button', { name: 'Transportista' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    // Con el perfil ya corregido, el segundo intento entra a la app del conductor.
+    await page.getByLabel('Contraseña').fill(CONDUCTOR_FIJO.contrasena)
+    await page.getByRole('button', { name: 'Iniciar Sesión' }).click()
+    await expect(page).toHaveURL(/\/conductor/)
+  })
+
+  test('un administrador con el perfil Transportista no entra', async ({ page }) => {
+    await page.goto('/ingresar')
+    await page.getByRole('button', { name: 'Transportista' }).click()
+    await page.getByLabel('Correo').fill(ADMIN_FIJO.correo)
+    await page.getByLabel('Contraseña').fill(ADMIN_FIJO.contrasena)
+    await page.getByRole('button', { name: 'Iniciar Sesión' }).click()
+    await expect(page.getByText(/Esta cuenta es de coordinación/)).toBeVisible()
+    await expect(page).toHaveURL(/\/ingresar$/)
+  })
+})

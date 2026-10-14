@@ -46,7 +46,7 @@ for (const t of TAMANOS) {
     })
 
     test('app del conductor', async ({ page }) => {
-      await ingresar(page, CONDUCTOR_FIJO.correo, CONDUCTOR_FIJO.contrasena)
+      await ingresar(page, CONDUCTOR_FIJO.correo, CONDUCTOR_FIJO.contrasena, 'transportista')
       for (const ruta of CONDUCTOR) {
         await page.goto(ruta)
         await sinDesbordeHorizontal(page, `${t.nombre} ${ruta}`)
