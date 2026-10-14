@@ -60,10 +60,15 @@ export async function resumenHoy() {
   const hoy = eq(ruta.fecha, fecha)
   const [porEstado, paradas] = await Promise.all([rutasPorEstado(hoy), totalesParadas(hoy)])
 
-  const [conductoresEnRuta] = await db
-    .select({ total: contar() })
-    .from(conductor)
-    .where(eq(conductor.disponibilidad, 'en_ruta'))
+  const conteoConductores = (disponibilidad: 'en_ruta' | 'disponible') =>
+    db
+      .select({ total: contar() })
+      .from(conductor)
+      .where(and(eq(conductor.disponibilidad, disponibilidad), eq(conductor.activo, true)))
+  const [[conductoresEnRuta], [conductoresDisponibles]] = await Promise.all([
+    conteoConductores('en_ruta'),
+    conteoConductores('disponible'),
+  ])
 
   const limite = new Date(Date.now() - MINUTOS_DEMORA_ACEPTACION * 60_000)
   const demoradas = await db
@@ -83,6 +88,7 @@ export async function resumenHoy() {
     rutasPorEstado: conteoPorEstado(porEstado),
     paradas,
     conductoresEnRuta: conductoresEnRuta?.total ?? 0,
+    conductoresDisponibles: conductoresDisponibles?.total ?? 0,
     demoradas,
   }
 }

@@ -3,6 +3,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { AlertTriangle, CheckCircle, Plus, RefreshCw, Truck } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { resumenHoyQuery } from '@/features/reportes/api'
+import { bodegaQuery } from '@/features/rutas/api'
 import { mensajeDeError } from '@/lib/api'
 import { formatearFechaLarga } from '@/lib/formato'
 
@@ -14,12 +15,17 @@ function minutosDesde(fecha: string | Date) {
 
 function InicioPanel() {
   const { data, isPending, error, refetch } = useQuery(resumenHoyQuery)
+  // La bodega puede no estar configurada todavía (la API responde 409): el encabezado simplemente la omite.
+  const { data: bodega } = useQuery({ ...bodegaQuery, retry: false })
 
   const totalGuias = data
     ? data.paradas.entregadas + data.paradas.pendientes + data.paradas.fallidas
     : 0
   const porcentajeEfectividad =
     totalGuias > 0 ? Math.round(((data?.paradas.entregadas ?? 0) / totalGuias) * 100) : 0
+  // Avance del día: paradas ya resueltas (entregadas o con novedad) sobre todas las de hoy.
+  const resueltas = data ? data.paradas.entregadas + data.paradas.fallidas : 0
+  const porcentajeAvance = totalGuias > 0 ? Math.round((resueltas / totalGuias) * 100) : 0
 
   return (
     <div className="grid gap-6 p-2">
@@ -29,7 +35,7 @@ function InicioPanel() {
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Despacho Centralizado • Turno Mañana/Tarde
+              Despacho centralizado
             </span>
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
@@ -37,10 +43,12 @@ function InicioPanel() {
           </h1>
           <p className="text-sm text-muted-foreground flex items-center gap-2">
             <span>{data ? formatearFechaLarga(data.fecha) : 'Cargando fecha...'}</span>
-            <span>•</span>
-            <span className="font-mono text-secondary font-semibold">
-              Hub CEDI L&amp;H Principal
-            </span>
+            {bodega && (
+              <>
+                <span>•</span>
+                <span className="font-mono text-secondary font-semibold">{bodega.direccion}</span>
+              </>
+            )}
           </p>
         </div>
 
@@ -97,12 +105,14 @@ function InicioPanel() {
                     <span className="text-xs text-muted-foreground font-medium">unidades</span>
                   </div>
                   <span className="px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 text-xs font-bold">
-                    VRP Listo
+                    {data.rutasPorEstado.planificada} planificadas
                   </span>
                 </div>
                 <div className="mt-3 pt-2 bg-muted/50 rounded-lg px-3 py-1.5 flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground font-medium">Prioridad de despacho</span>
-                  <span className="text-amber-600 font-bold uppercase">En revisión</span>
+                  <span className="text-muted-foreground font-medium">En borrador</span>
+                  <span className="text-foreground font-bold">
+                    {data.rutasPorEstado.borrador} rutas
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -130,13 +140,15 @@ function InicioPanel() {
                     </span>
                     <span className="text-xs text-muted-foreground font-medium">vehículos</span>
                   </div>
-                  <span className="font-mono text-secondary font-bold text-sm">68% Global</span>
+                  <span className="font-mono text-secondary font-bold text-sm">
+                    {porcentajeAvance}% del día
+                  </span>
                 </div>
                 <div className="mt-4">
                   <div className="w-full bg-muted h-2 rounded-full overflow-hidden">
                     <div
                       className="bg-secondary h-full rounded-full transition-all duration-700"
-                      style={{ width: '68%' }}
+                      style={{ width: `${porcentajeAvance}%` }}
                     ></div>
                   </div>
                 </div>
@@ -189,7 +201,7 @@ function InicioPanel() {
                 <div className="flex items-start justify-between">
                   <div className="flex flex-col">
                     <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Turno Tarde En Base
+                      Disponibles para asignar
                     </span>
                     <span className="text-xl font-extrabold text-foreground mt-1">
                       Conductores Listos
@@ -204,17 +216,17 @@ function InicioPanel() {
                 <div className="flex items-baseline justify-between mt-2">
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-3xl font-black text-foreground tracking-tight">
-                      {data.conductoresEnRuta}
+                      {data.conductoresDisponibles}
                     </span>
-                    <span className="text-xs text-muted-foreground font-medium">en activo</span>
+                    <span className="text-xs text-muted-foreground font-medium">disponibles</span>
                   </div>
                   <span className="px-2 py-1 rounded-lg bg-blue-500/10 text-secondary text-xs font-bold">
-                    Lic. A3 / A2
+                    {data.conductoresDisponibles + data.conductoresEnRuta} activos
                   </span>
                 </div>
                 <div className="mt-3 pt-2 bg-muted/50 rounded-lg px-3 py-1.5 flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground font-medium">Disponibilidad flota</span>
-                  <span className="text-emerald-600 font-bold">100% Habilitados</span>
+                  <span className="text-muted-foreground font-medium">En ruta ahora</span>
+                  <span className="text-foreground font-bold">{data.conductoresEnRuta}</span>
                 </div>
               </CardContent>
             </Card>
