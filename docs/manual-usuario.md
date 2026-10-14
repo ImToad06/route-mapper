@@ -31,9 +31,17 @@ Las imágenes se generan con datos de demostración (`docs/manual/capturas.spec.
 
 ## 3. Inicio del panel
 
-Resume el día: rutas pendientes de planificar, rutas en curso, entregas del día (realizadas / total) y
-conductores listos. Debajo aparecen las **asignaciones sin responder**: rutas que llevan más de 30 minutos
-sin que el conductor las acepte o rechace. Esas son las que debe llamar o reasignar.
+Resume el día con datos en vivo (botón **Actualizar Estado** para refrescar):
+
+- **Rutas pendientes:** borradores y planificadas, con el detalle de cuántas hay de cada una.
+- **En curso:** rutas que están en la calle y el **avance del día**, es decir, las paradas ya resueltas
+  (entregadas o con novedad) sobre el total de paradas de hoy.
+- **Entregadas hoy:** entregas realizadas sobre el total de guías, con su porcentaje y las que siguen pendientes.
+- **Conductores listos:** conductores disponibles para asignar, cuántos hay activos en total y cuántos van en ruta.
+
+Junto al título aparece la dirección de la bodega, si ya fue configurada. Debajo están las
+**asignaciones sin responder**: rutas que llevan más de 30 minutos sin que el conductor las acepte o
+rechace. Esas son las que debe llamar o reasignar.
 
 ![Inicio del panel](manual/img/02-panel.png)
 

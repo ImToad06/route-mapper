@@ -54,7 +54,7 @@ Al ingresar por primera vez con la contraseña temporal del seed, el sistema exi
 | `bun run lint` / `lint:fix` | Biome (formato + lint) |
 | `bun run typecheck` | `tsc --noEmit` en todos los paquetes |
 | `bun run test` | `bun test` (api, shared) y Vitest (web) |
-| `bun run test:e2e` | Playwright (requiere `bunx playwright install chromium` la primera vez) |
+| `bun run test:e2e` | Playwright en Chromium: escritorio y móvil (requiere `bunx playwright install chromium` la primera vez). Otros navegadores: ver `docs/navegadores.md` |
 | `bun run build` | Build de producción de api y web |
 | `bun run db:generate` | Genera una migración a partir del esquema Drizzle |
 | `bun run db:migrate` | Aplica migraciones pendientes |
