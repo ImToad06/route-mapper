@@ -100,3 +100,48 @@ jobs:
           ssh -i ~/.ssh/id_deploy -o StrictHostKeyChecking=yes \
             "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
             "cd ${{ vars.DEPLOY_DIR || '/opt/lh-rutas' }} && infra/deploy/desplegar.sh"
+
+  navegadores:
+    name: Compatibilidad (${{ matrix.navegador }})
+    runs-on: ubuntu-latest
+    needs: verificar
+    strategy:
+      fail-fast: false
+      matrix:
+        navegador: [firefox, webkit, edge]
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: lh
+          POSTGRES_PASSWORD: lh
+          POSTGRES_DB: lh_rutas_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U lh" --health-interval 10s --health-timeout 5s --health-retries 5
+    env:
+      DATABASE_URL: postgres://lh:lh@localhost:5432/lh_rutas_test
+      JWT_SECRET: secreto-solo-para-ci-de-al-menos-32-caracteres
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - run: bun run db:migrate
+      - name: Navegador
+        run: bunx playwright install --with-deps ${{ matrix.navegador == 'edge' && 'msedge' || matrix.navegador }}
+      - name: Pruebas de compatibilidad (RNF-12)
+        run: bunx playwright test --project=${{ matrix.navegador }} e2e/compatibilidad.spec.ts
+        env:
+          CI: 'true'
+          API_PORT: '3000'
+          CORS_ORIGIN: http://localhost:5173
+      - name: Informe de Playwright
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-${{ matrix.navegador }}
+          path: playwright-report
+          retention-days: 7

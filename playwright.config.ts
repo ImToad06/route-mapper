@@ -35,6 +35,23 @@ export default defineConfig({
       },
     },
     { name: 'movil', use: { ...devices['Pixel 7'] }, testMatch: /movil\.spec\.ts/ },
+    // Matriz de navegadores (RNF-12): `bun run test:e2e --project=firefox` (webkit, edge). Edge usa el
+    // Microsoft Edge instalado en la máquina (en CI: `bunx playwright install msedge`).
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+      testMatch: /compatibilidad\.spec\.ts/,
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+      testMatch: /compatibilidad\.spec\.ts/,
+    },
+    {
+      name: 'edge',
+      use: { ...devices['Desktop Edge'], channel: 'msedge' },
+      testMatch: /compatibilidad\.spec\.ts/,
+    },
   ],
   webServer: [
     {
