@@ -58,18 +58,27 @@ services:
       - api
 
   backup:
-    image: postgres:17-alpine
+    build: infra/backup
     restart: unless-stopped
     environment:
+      TZ: ${TZ:-America/Bogota}
       PGHOST: db
       PGUSER: ${POSTGRES_USER:-lh}
       PGPASSWORD: ${POSTGRES_PASSWORD}
       PGDATABASE: ${POSTGRES_DB:-lh_rutas}
+      BACKUP_HORA: ${BACKUP_HORA:-02:00}
       BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
+      # Copia fuera del servidor (RNF-11). Vacío = solo copia local. Ver docs/runbook.md.
+      BACKUP_REMOTE: ${BACKUP_REMOTE:-}
+      BACKUP_REMOTE_KEEP_DAYS: ${BACKUP_REMOTE_KEEP_DAYS:-60}
+      RCLONE_CONFIG_OFFSITE_TYPE: ${RCLONE_OFFSITE_TYPE:-s3}
+      RCLONE_CONFIG_OFFSITE_PROVIDER: ${RCLONE_OFFSITE_PROVIDER:-Other}
+      RCLONE_CONFIG_OFFSITE_ENDPOINT: ${RCLONE_OFFSITE_ENDPOINT:-}
+      RCLONE_CONFIG_OFFSITE_REGION: ${RCLONE_OFFSITE_REGION:-}
+      RCLONE_CONFIG_OFFSITE_ACCESS_KEY_ID: ${RCLONE_OFFSITE_ACCESS_KEY_ID:-}
+      RCLONE_CONFIG_OFFSITE_SECRET_ACCESS_KEY: ${RCLONE_OFFSITE_SECRET_ACCESS_KEY:-}
     volumes:
-      - ./infra/backup/backup.sh:/backup.sh:ro
       - backup_data:/backups
-    entrypoint: ["sh", "/backup.sh"]
     depends_on:
       db:
         condition: service_healthy
