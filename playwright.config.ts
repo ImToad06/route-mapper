@@ -9,7 +9,7 @@ export default defineConfig({
   // Un solo worker: los archivos comparten datos (catalogos → rutas) y la base de datos de desarrollo.
   workers: 1,
   retries: process.env.CI ? 1 : 0,
-  reporter: process.env.CI ? 'github' : 'list',
+  reporter: process.env.CI ? [['github'], ['list'], ['html', { open: 'never' }]] : 'list',
   globalSetup: './e2e/global-setup.ts',
   globalTeardown: './e2e/global-teardown.ts',
   use: {
