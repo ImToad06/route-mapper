@@ -1,0 +1,62 @@
+# Blueprint de Render para la DEMOSTRACIÓN: base de datos + API + panel web.
+# Render → New → Blueprint → elija este repositorio y la rama dev (o main). Guía completa: docs/demo-render.md
+# El motor de rutas (OSRM/VROOM) no se despliega aquí: la demo usa recorridos ya calculados.
+databases:
+  - name: lh-db
+    databaseName: lh_rutas
+    user: lh
+    plan: basic-256mb # "free" funciona pero Render la borra a los 30 días
+    region: virginia
+    postgresMajorVersion: "17"
+    # Solo accesible desde los servicios de Render. Para cargar los datos de la demo desde su computador,
+    # agregue SU IP (/32) en el panel de la base (Access Control) y quítela al terminar. Ver docs/demo-render.md.
+    ipAllowList: []
+
+services:
+  - type: web
+    name: lh-rutas-api
+    runtime: docker
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    plan: starter # "free" duerme tras 15 min sin uso: el primer clic de la demo tardaría ~1 min
+    region: virginia
+    healthCheckPath: /api/salud
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TZ
+        value: America/Bogota
+      - key: API_PORT
+        value: "10000"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: lh-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: COOKIE_SEGURA
+        value: "true"
+      - key: CONFIAR_PROXY
+        value: "true"
+      # Debe ser exactamente la URL pública del panel (la de lh-rutas-web). Ajústela si Render le asignó otra.
+      - key: CORS_ORIGIN
+        value: https://lh-rutas-web.onrender.com
+
+  - type: web
+    name: lh-rutas-web
+    runtime: static
+    buildCommand: npm install -g bun && bun install --frozen-lockfile --ignore-scripts && cd apps/web && bun run build
+    staticPublishPath: apps/web/dist
+    routes:
+      # El navegador habla siempre con este mismo dominio (la cookie de sesión lo exige); Render reenvía /api a la API.
+      # Si la URL de lh-rutas-api es otra, cámbiela aquí.
+      - type: rewrite
+        source: /api/*
+        destination: https://lh-rutas-api.onrender.com/api/*
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
