@@ -1,5 +1,5 @@
 import { ESTADOS_RUTA, type EstadoRuta, type PeriodoReporteInput } from '@lh/shared'
-import { and, eq, gte, inArray, isNotNull, lte } from 'drizzle-orm'
+import { and, count, eq, gte, isNotNull, lte, type SQL, sql } from 'drizzle-orm'
 import { db } from '../../db/client.ts'
 import { conductor, destino, ruta, rutaParada, zona } from '../../db/schema/index.ts'
 import { contar } from '../../lib/catalogo.ts'
@@ -13,10 +13,40 @@ const hoyIso = () => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-const conteoPorEstado = (rutas: { estado: EstadoRuta }[]) =>
-  Object.fromEntries(
-    ESTADOS_RUTA.map((e) => [e, rutas.filter((r) => r.estado === e).length]),
-  ) as Record<EstadoRuta, number>
+/** Rutas agrupadas por estado con una sola consulta; los estados sin rutas quedan en 0. */
+const conteoPorEstado = (filas: { estado: EstadoRuta; total: number }[]) => {
+  const conteo = Object.fromEntries(ESTADOS_RUTA.map((e) => [e, 0])) as Record<EstadoRuta, number>
+  for (const f of filas) conteo[f.estado] = f.total
+  return conteo
+}
+
+/** Cuenta paradas por resultado con `count(*) filter`, para no traer una fila por parada (RNF-05). */
+const cuentaParadas = (estado: 'entregada' | 'pendiente' | 'fallida') =>
+  sql<number>`count(*) filter (where ${rutaParada.estadoEntrega} = ${estado})`.mapWith(Number)
+
+const rutasPorEstado = (condicion: SQL | undefined) =>
+  db
+    .select({ estado: ruta.estado, total: count() })
+    .from(ruta)
+    .where(condicion)
+    .groupBy(ruta.estado)
+
+const totalesParadas = async (condicion: SQL | undefined) => {
+  const [fila] = await db
+    .select({
+      entregadas: cuentaParadas('entregada'),
+      pendientes: cuentaParadas('pendiente'),
+      fallidas: cuentaParadas('fallida'),
+    })
+    .from(rutaParada)
+    .innerJoin(ruta, eq(ruta.id, rutaParada.rutaId))
+    .where(condicion)
+  return {
+    entregadas: fila?.entregadas ?? 0,
+    pendientes: fila?.pendientes ?? 0,
+    fallidas: fila?.fallidas ?? 0,
+  }
+}
 
 /** Minutos que lleva una ruta pendiente de aceptación sin respuesta del conductor. */
 const MINUTOS_DEMORA_ACEPTACION = 30
@@ -27,17 +57,8 @@ const MINUTOS_DEMORA_ACEPTACION = 30
  */
 export async function resumenHoy() {
   const fecha = hoyIso()
-  const rutasHoy = await db
-    .select({ id: ruta.id, estado: ruta.estado })
-    .from(ruta)
-    .where(eq(ruta.fecha, fecha))
-  const idsHoy = rutasHoy.map((r) => r.id)
-  const paradasHoy = idsHoy.length
-    ? await db
-        .select({ estadoEntrega: rutaParada.estadoEntrega })
-        .from(rutaParada)
-        .where(inArray(rutaParada.rutaId, idsHoy))
-    : []
+  const hoy = eq(ruta.fecha, fecha)
+  const [porEstado, paradas] = await Promise.all([rutasPorEstado(hoy), totalesParadas(hoy)])
 
   const [conductoresEnRuta] = await db
     .select({ total: contar() })
@@ -59,12 +80,8 @@ export async function resumenHoy() {
 
   return {
     fecha,
-    rutasPorEstado: conteoPorEstado(rutasHoy),
-    paradas: {
-      entregadas: paradasHoy.filter((p) => p.estadoEntrega === 'entregada').length,
-      pendientes: paradasHoy.filter((p) => p.estadoEntrega === 'pendiente').length,
-      fallidas: paradasHoy.filter((p) => p.estadoEntrega === 'fallida').length,
-    },
+    rutasPorEstado: conteoPorEstado(porEstado),
+    paradas,
     conductoresEnRuta: conductoresEnRuta?.total ?? 0,
     demoradas,
   }
@@ -73,22 +90,20 @@ export async function resumenHoy() {
 /** RF-22: rutas por estado y entregas realizadas/pendientes/fallidas en un periodo. */
 export async function reporteRutas(f: PeriodoReporteInput) {
   const condicion = and(gte(ruta.fecha, f.desde), lte(ruta.fecha, f.hasta))
-  const rutas = await db.select({ estado: ruta.estado }).from(ruta).where(condicion)
-  const paradas = await db
-    .select({ estadoEntrega: rutaParada.estadoEntrega })
-    .from(rutaParada)
-    .innerJoin(ruta, eq(ruta.id, rutaParada.rutaId))
-    .where(condicion)
+  const [porEstado, paradas] = await Promise.all([
+    rutasPorEstado(condicion),
+    totalesParadas(condicion),
+  ])
 
   return {
     desde: f.desde,
     hasta: f.hasta,
-    totalRutas: rutas.length,
-    rutasPorEstado: conteoPorEstado(rutas),
+    totalRutas: porEstado.reduce((acc, r) => acc + r.total, 0),
+    rutasPorEstado: conteoPorEstado(porEstado),
     entregas: {
-      realizadas: paradas.filter((p) => p.estadoEntrega === 'entregada').length,
-      pendientes: paradas.filter((p) => p.estadoEntrega === 'pendiente').length,
-      fallidas: paradas.filter((p) => p.estadoEntrega === 'fallida').length,
+      realizadas: paradas.entregadas,
+      pendientes: paradas.pendientes,
+      fallidas: paradas.fallidas,
     },
   }
 }
@@ -100,64 +115,61 @@ export async function reporteConductores(f: PeriodoReporteInput) {
     lte(ruta.fecha, f.hasta),
     isNotNull(ruta.conductorId),
   )
-  const rutasPeriodo = await db
-    .select({
-      id: ruta.id,
-      conductorId: ruta.conductorId,
-      estado: ruta.estado,
-      asignadaEn: ruta.asignadaEn,
-      aceptadaEn: ruta.aceptadaEn,
-    })
-    .from(ruta)
-    .where(condicion)
+  const cuentaRutas = (estado: EstadoRuta) =>
+    sql<number>`count(*) filter (where ${ruta.estado} = ${estado})`.mapWith(Number)
 
-  const idsRutas = rutasPeriodo.map((r) => r.id)
-  const paradas = idsRutas.length
-    ? await db
-        .select({
-          rutaId: rutaParada.rutaId,
-          estadoEntrega: rutaParada.estadoEntrega,
-          novedadTipo: rutaParada.novedadTipo,
-        })
-        .from(rutaParada)
-        .where(inArray(rutaParada.rutaId, idsRutas))
-    : []
+  const [rutasPorConductor, paradasPorConductor] = await Promise.all([
+    db
+      .select({
+        conductorId: ruta.conductorId,
+        totalRutas: count(),
+        completadas: cuentaRutas('completada'),
+        incompletas: cuentaRutas('incompleta'),
+        canceladas: cuentaRutas('cancelada'),
+        minutosAceptacionProm: sql<
+          number | null
+        >`avg(extract(epoch from (${ruta.aceptadaEn} - ${ruta.asignadaEn})) / 60) filter (where ${ruta.asignadaEn} is not null and ${ruta.aceptadaEn} is not null)`.mapWith(
+          (v) => (v == null ? null : Math.round(Number(v))),
+        ),
+      })
+      .from(ruta)
+      .where(condicion)
+      .groupBy(ruta.conductorId),
+    db
+      .select({
+        conductorId: ruta.conductorId,
+        paradasEntregadas: cuentaParadas('entregada'),
+        paradasFallidas: cuentaParadas('fallida'),
+        novedades:
+          sql<number>`count(*) filter (where ${rutaParada.novedadTipo} is not null)`.mapWith(
+            Number,
+          ),
+      })
+      .from(rutaParada)
+      .innerJoin(ruta, eq(ruta.id, rutaParada.rutaId))
+      .where(condicion)
+      .groupBy(ruta.conductorId),
+  ])
+  if (rutasPorConductor.length === 0) return []
 
-  const idsConductores = [...new Set(rutasPeriodo.map((r) => r.conductorId as number))]
-  const conductores = idsConductores.length
-    ? await db
-        .select({ id: conductor.id, nombre: conductor.nombre })
-        .from(conductor)
-        .where(inArray(conductor.id, idsConductores))
-    : []
+  const nombres = await db.select({ id: conductor.id, nombre: conductor.nombre }).from(conductor)
+  const nombrePorId = new Map(nombres.map((c) => [c.id, c.nombre]))
+  const paradasPorId = new Map(paradasPorConductor.map((p) => [p.conductorId, p]))
 
-  return conductores
-    .map((c) => {
-      const rutasC = rutasPeriodo.filter((r) => r.conductorId === c.id)
-      const idsC = new Set(rutasC.map((r) => r.id))
-      const paradasC = paradas.filter((p) => idsC.has(p.rutaId))
-      const aceptadasATiempo = rutasC.filter((r) => r.asignadaEn && r.aceptadaEn)
-      const minutosAceptacionProm = aceptadasATiempo.length
-        ? Math.round(
-            aceptadasATiempo.reduce(
-              (acc, r) =>
-                acc +
-                ((r.aceptadaEn as Date).getTime() - (r.asignadaEn as Date).getTime()) / 60_000,
-              0,
-            ) / aceptadasATiempo.length,
-          )
-        : null
+  return rutasPorConductor
+    .map((r) => {
+      const p = paradasPorId.get(r.conductorId)
       return {
-        conductorId: c.id,
-        nombre: c.nombre,
-        totalRutas: rutasC.length,
-        completadas: rutasC.filter((r) => r.estado === 'completada').length,
-        incompletas: rutasC.filter((r) => r.estado === 'incompleta').length,
-        canceladas: rutasC.filter((r) => r.estado === 'cancelada').length,
-        paradasEntregadas: paradasC.filter((p) => p.estadoEntrega === 'entregada').length,
-        paradasFallidas: paradasC.filter((p) => p.estadoEntrega === 'fallida').length,
-        novedades: paradasC.filter((p) => p.novedadTipo != null).length,
-        minutosAceptacionProm,
+        conductorId: r.conductorId as number,
+        nombre: nombrePorId.get(r.conductorId as number) ?? '',
+        totalRutas: r.totalRutas,
+        completadas: r.completadas,
+        incompletas: r.incompletas,
+        canceladas: r.canceladas,
+        paradasEntregadas: p?.paradasEntregadas ?? 0,
+        paradasFallidas: p?.paradasFallidas ?? 0,
+        novedades: p?.novedades ?? 0,
+        minutosAceptacionProm: r.minutosAceptacionProm,
       }
     })
     .sort((a, b) => a.nombre.localeCompare(b.nombre))
@@ -167,28 +179,20 @@ export async function reporteConductores(f: PeriodoReporteInput) {
 export async function reporteZonas(f: PeriodoReporteInput) {
   const condicion = and(gte(ruta.fecha, f.desde), lte(ruta.fecha, f.hasta))
   const filas = await db
-    .select({ zonaId: zona.id, estadoEntrega: rutaParada.estadoEntrega })
+    .select({
+      zonaId: zona.id,
+      nombre: zona.nombre,
+      totalParadas: count(),
+      entregadas: cuentaParadas('entregada'),
+      fallidas: cuentaParadas('fallida'),
+      pendientes: cuentaParadas('pendiente'),
+    })
     .from(rutaParada)
     .innerJoin(ruta, eq(ruta.id, rutaParada.rutaId))
     .innerJoin(destino, eq(destino.id, rutaParada.destinoId))
     .innerJoin(zona, eq(zona.id, destino.zonaId))
     .where(condicion)
-
-  const zonas = await db
-    .select({ id: zona.id, nombre: zona.nombre })
-    .from(zona)
+    .groupBy(zona.id, zona.nombre)
     .orderBy(zona.nombre)
-  return zonas
-    .map((z) => {
-      const filasZ = filas.filter((f) => f.zonaId === z.id)
-      return {
-        zonaId: z.id,
-        nombre: z.nombre,
-        totalParadas: filasZ.length,
-        entregadas: filasZ.filter((f) => f.estadoEntrega === 'entregada').length,
-        fallidas: filasZ.filter((f) => f.estadoEntrega === 'fallida').length,
-        pendientes: filasZ.filter((f) => f.estadoEntrega === 'pendiente').length,
-      }
-    })
-    .filter((z) => z.totalParadas > 0)
+  return filas
 }

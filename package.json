@@ -20,7 +20,8 @@
     "db:migrate": "bun run --filter @lh/api db:migrate",
     "db:seed": "bun run --filter @lh/api db:seed",
     "prepare": "lefthook install",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:carga": "bun infra/carga/carga.ts"
   },
   "engines": {
     "bun": ">=1.2"

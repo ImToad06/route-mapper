@@ -1,32 +1,43 @@
 import { relations } from 'drizzle-orm'
-import { integer, pgTable, serial, text, timestamp, varchar } from 'drizzle-orm/pg-core'
+import { index, integer, pgTable, serial, text, timestamp, varchar } from 'drizzle-orm/pg-core'
 import { ruta } from './rutas.ts'
 import { usuario } from './usuarios.ts'
 
 /** Bitácora de operaciones de los usuarios (RF-27). */
-export const bitacora = pgTable('bitacora', {
-  id: serial().primaryKey(),
-  usuarioId: integer().references(() => usuario.id, { onDelete: 'set null' }),
-  accion: varchar({ length: 40 }).notNull(),
-  entidad: varchar({ length: 40 }).notNull(),
-  entidadId: integer(),
-  descripcion: text().notNull(),
-  fechaHora: timestamp({ withTimezone: true }).notNull().defaultNow(),
-})
+export const bitacora = pgTable(
+  'bitacora',
+  {
+    id: serial().primaryKey(),
+    usuarioId: integer().references(() => usuario.id, { onDelete: 'set null' }),
+    accion: varchar({ length: 40 }).notNull(),
+    entidad: varchar({ length: 40 }).notNull(),
+    entidadId: integer(),
+    descripcion: text().notNull(),
+    fechaHora: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('bitacora_fecha_hora_idx').on(t.fechaHora),
+    index('bitacora_usuario_id_idx').on(t.usuarioId),
+  ],
+)
 
 /** Notificaciones en la aplicación (RF-18). */
-export const notificacion = pgTable('notificacion', {
-  id: serial().primaryKey(),
-  usuarioId: integer()
-    .notNull()
-    .references(() => usuario.id, { onDelete: 'cascade' }),
-  tipo: varchar({ length: 40 }).notNull(),
-  titulo: varchar({ length: 120 }).notNull(),
-  cuerpo: varchar({ length: 500 }).notNull(),
-  rutaId: integer().references(() => ruta.id, { onDelete: 'cascade' }),
-  leidaEn: timestamp({ withTimezone: true }),
-  creadoEn: timestamp({ withTimezone: true }).notNull().defaultNow(),
-})
+export const notificacion = pgTable(
+  'notificacion',
+  {
+    id: serial().primaryKey(),
+    usuarioId: integer()
+      .notNull()
+      .references(() => usuario.id, { onDelete: 'cascade' }),
+    tipo: varchar({ length: 40 }).notNull(),
+    titulo: varchar({ length: 120 }).notNull(),
+    cuerpo: varchar({ length: 500 }).notNull(),
+    rutaId: integer().references(() => ruta.id, { onDelete: 'cascade' }),
+    leidaEn: timestamp({ withTimezone: true }),
+    creadoEn: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('notificacion_usuario_id_idx').on(t.usuarioId, t.creadoEn)],
+)
 
 export const bitacoraRelations = relations(bitacora, ({ one }) => ({
   usuario: one(usuario, { fields: [bitacora.usuarioId], references: [usuario.id] }),
