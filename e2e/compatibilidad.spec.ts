@@ -35,7 +35,8 @@ test.describe('compatibilidad de navegadores', () => {
         errores.push(`console: ${m.text()}`)
     })
     await ingresar(page, ADMIN_FIJO.correo, ADMIN_FIJO.contrasena)
-    // Firefox aborta un goto() si la navegación del SPA tras el ingreso sigue en curso.
+    // Firefox y WebKit interrumpen un goto() si la redirección del SPA tras el ingreso sigue en curso.
+    await page.waitForURL(/\/panel$/)
     await page.waitForLoadState('networkidle')
     for (const ruta of SECCIONES) {
       await page.goto(ruta)
@@ -48,6 +49,7 @@ test.describe('compatibilidad de navegadores', () => {
 
   test('el mapa de destinos se dibuja (WebGL)', async ({ page }) => {
     await ingresar(page, ADMIN_FIJO.correo, ADMIN_FIJO.contrasena)
+    await page.waitForURL(/\/panel$/)
     await page.waitForLoadState('networkidle')
     await page.goto('/panel/destinos')
     await page.getByRole('tab', { name: 'Mapa' }).click()
