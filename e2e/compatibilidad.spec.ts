@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { ADMIN_FIJO, ingresar } from './ayudas'
+import { ADMIN_FIJO, ingresar, recargar } from './ayudas'
 
 /**
  * Matriz de navegadores (RNF-12): flujos básicos que deben funcionar igual en Chrome, Firefox, Edge y
@@ -7,11 +7,11 @@ import { ADMIN_FIJO, ingresar } from './ayudas'
  * Pensado para no depender de textos de títulos que cambian con el diseño.
  */
 const SECCIONES = [
-  '/panel',
-  '/panel/rutas',
-  '/panel/destinos',
-  '/panel/reportes',
-  '/panel/vehiculos',
+  { ruta: '/panel', enlace: 'Inicio' },
+  { ruta: '/panel/rutas', enlace: 'Rutas' },
+  { ruta: '/panel/destinos', enlace: 'Destinos' },
+  { ruta: '/panel/reportes', enlace: 'Reportes' },
+  { ruta: '/panel/vehiculos', enlace: 'Vehículos' },
 ]
 
 test.describe('compatibilidad de navegadores', () => {
@@ -35,23 +35,36 @@ test.describe('compatibilidad de navegadores', () => {
         errores.push(`console: ${m.text()}`)
     })
     await ingresar(page, ADMIN_FIJO.correo, ADMIN_FIJO.contrasena)
-    // Firefox y WebKit interrumpen un goto() si la redirección del SPA tras el ingreso sigue en curso.
-    await page.waitForURL(/\/panel$/)
+    // Se navega con los enlaces del menú, como un usuario: un goto() inmediato tras el ingreso choca en
+    // Firefox y WebKit con la redirección que el SPA aún está haciendo (Navigation … is interrupted).
+    await expect(page).toHaveURL(/\/panel$/)
     await page.waitForLoadState('networkidle')
-    for (const ruta of SECCIONES) {
-      await page.goto(ruta)
+    for (const { ruta, enlace } of SECCIONES) {
+      await page.getByRole('link', { name: enlace, exact: true }).click()
       await expect(page).toHaveURL(new RegExp(`${ruta}$`))
       await expect(page.locator('main, [role="main"]').first()).toBeVisible()
       await page.waitForLoadState('networkidle')
     }
+    // Sin errores durante la navegación. La recarga se mide aparte: al descargar el documento, el servidor
+    // de desarrollo en frío corta peticiones de módulos lazy en curso y el navegador las registra como error.
     expect(errores).toEqual([])
+    errores.length = 0
+    // Una recarga completa ya con la página en reposo: la sesión se recupera con la cookie de refresco.
+    await recargar(page)
+    await expect(page).toHaveURL(/\/panel\/vehiculos$/)
+    await expect(page.locator('main, [role="main"]').first()).toBeVisible()
+    await page.waitForLoadState('networkidle')
+    test
+      .info()
+      .annotations.push({ type: 'errores tras recargar', description: errores.join(' | ') })
   })
 
   test('el mapa de destinos se dibuja (WebGL)', async ({ page }) => {
     await ingresar(page, ADMIN_FIJO.correo, ADMIN_FIJO.contrasena)
-    await page.waitForURL(/\/panel$/)
+    await expect(page).toHaveURL(/\/panel$/)
     await page.waitForLoadState('networkidle')
-    await page.goto('/panel/destinos')
+    await page.getByRole('link', { name: 'Destinos', exact: true }).click()
+    await expect(page).toHaveURL(/\/panel\/destinos$/)
     await page.getByRole('tab', { name: 'Mapa' }).click()
     const lienzo = page.locator('.maplibregl-canvas').first()
     const hayWebgl = await page.evaluate(() => {

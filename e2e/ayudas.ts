@@ -24,3 +24,27 @@ export const capturas = process.env.CAPTURAS_DIR
 export async function capturar(page: Page, nombre: string) {
   if (capturas) await page.screenshot({ path: `${capturas}/${nombre}.png` })
 }
+
+/**
+ * Recarga la página como lo haría el usuario (F5), sin que Playwright siga la navegación: con el servidor
+ * de desarrollo en frío Firefox responde NS_BINDING_ABORTED a page.reload() aunque la recarga termine bien,
+ * y WebKit a veces "interrupted by another navigation". Quien llama debe esperar después un elemento de la
+ * página recargada (las aserciones de Playwright reintentan hasta que aparece).
+ */
+export async function recargar(page: Page) {
+  // Marca la página actual: la recarga terminó cuando la marca ya no existe (documento nuevo).
+  await page.evaluate(() => {
+    ;(window as unknown as { __antesDeRecargar?: boolean }).__antesDeRecargar = true
+  })
+  await page.evaluate(() => location.reload()).catch(() => {})
+  await expect
+    .poll(() =>
+      page
+        .evaluate(
+          () => (window as unknown as { __antesDeRecargar?: boolean }).__antesDeRecargar === true,
+        )
+        .catch(() => true),
+    )
+    .toBe(false)
+  await page.waitForLoadState('load')
+}
