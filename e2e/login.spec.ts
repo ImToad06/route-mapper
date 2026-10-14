@@ -26,7 +26,9 @@ test.describe
       await page.getByLabel('Confirmar nueva contraseña').fill(ADMIN.nueva)
       await page.getByRole('button', { name: 'Guardar contraseña' }).click()
       await expect(page).toHaveURL(/\/panel$/)
-      await expect(page.getByRole('heading', { name: /Hola, Admin E2E/ })).toBeVisible()
+      await expect(
+        page.getByRole('heading', { name: /Panel de Control de Operaciones/ }),
+      ).toBeVisible()
     })
 
     test('recargar mantiene la sesión (cookie de refresco)', async ({ page }) => {
@@ -36,7 +38,9 @@ test.describe
       await page.getByRole('button', { name: 'Iniciar Sesión' }).click()
       await expect(page).toHaveURL(/\/panel$/)
       await page.reload()
-      await expect(page.getByRole('heading', { name: /Hola, Admin E2E/ })).toBeVisible()
+      await expect(
+        page.getByRole('heading', { name: /Panel de Control de Operaciones/ }),
+      ).toBeVisible()
     })
 
     test('el administrador crea un usuario y recibe la contraseña temporal', async ({ page }) => {
