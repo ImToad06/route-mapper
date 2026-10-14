@@ -287,10 +287,12 @@ describe('reportes: rutas, conductores y zonas por periodo (RF-22, RF-23)', () =
       rutasPorEstado: Record<string, number>
       paradas: { entregadas: number; pendientes: number; fallidas: number }
       conductoresEnRuta: number
+      conductoresDisponibles: number
       demoradas: unknown[]
     }
     expect(r.fecha).toMatch(/^\d{4}-\d{2}-\d{2}$/)
     expect(typeof r.conductoresEnRuta).toBe('number')
+    expect(typeof r.conductoresDisponibles).toBe('number')
     expect(Array.isArray(r.demoradas)).toBe(true)
   })
 })

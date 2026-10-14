@@ -1,0 +1,32 @@
+# Producción con TLS (Nginx + Let's Encrypt). Se combina con docker-compose.yml:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile mapas up -d --build
+# Requiere DOMINIO y CORREO_TLS en .env; el primer certificado se obtiene con infra/deploy/iniciar-tls.sh.
+services:
+  api:
+    environment:
+      COOKIE_SEGURA: "true"
+      CORS_ORIGIN: https://${DOMINIO:?Defina DOMINIO en .env}
+
+  web:
+    ports: !override
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMINIO: ${DOMINIO:?Defina DOMINIO en .env}
+      NGINX_ENVSUBST_TEMPLATE_DIR: /etc/nginx/tls
+    volumes:
+      - letsencrypt:/etc/letsencrypt:ro
+      - certbot_www:/var/www/certbot:ro
+
+  certbot:
+    image: certbot/certbot:v3.0.1
+    restart: unless-stopped
+    volumes:
+      - letsencrypt:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    entrypoint: >-
+      /bin/sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done'
+
+volumes:
+  letsencrypt:
+  certbot_www:

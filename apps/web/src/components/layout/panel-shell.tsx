@@ -104,7 +104,7 @@ function Navegacion({ alNavegar }: { alNavegar?: () => void }) {
             to={e.to}
             activeOptions={{ exact: e.to === '/panel' }}
             onClick={alNavegar}
-            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground [&.active]:bg-sidebar-accent [&.active]:text-sidebar-foreground [&.active]:font-medium"
+            className="flex items-center gap-3 rounded-md border-l-2 border-transparent px-3 py-2 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground [&.active]:border-sidebar-primary [&.active]:bg-sidebar-accent [&.active]:font-medium [&.active]:text-sidebar-foreground"
           >
             {e.icono}
             {e.etiqueta}
@@ -119,7 +119,7 @@ export function PanelShell() {
   const [abierto, setAbierto] = useState(false)
   return (
     <div className="flex min-h-dvh">
-      <aside className="hidden w-60 shrink-0 flex-col gap-6 bg-sidebar p-4 text-sidebar-foreground md:flex">
+      <aside className="hidden w-60 shrink-0 flex-col gap-6 border-r border-sidebar-border bg-sidebar p-4 text-sidebar-foreground md:flex">
         <Marca />
         <Navegacion />
       </aside>
@@ -156,14 +156,14 @@ export function PanelShell() {
 
 function Marca({ compacta = false }: { compacta?: boolean }) {
   return (
-    <div className="flex items-center gap-2">
-      <Truck className="size-6 text-primary" aria-hidden="true" />
-      {!compacta && (
-        <div className="leading-tight">
-          <div className="text-sm font-semibold">Rutas L&amp;H</div>
-          <div className="text-xs text-sidebar-foreground/70">Panel de despacho</div>
-        </div>
-      )}
+    <div className="flex items-center gap-2.5">
+      <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
+        <Truck className="size-4" aria-hidden="true" />
+      </div>
+      <div className="leading-tight">
+        <div className="text-sm font-semibold">L&amp;H Distribuciones</div>
+        {!compacta && <div className="text-xs text-sidebar-foreground/60">Rutas y despacho</div>}
+      </div>
     </div>
   )
 }

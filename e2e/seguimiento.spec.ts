@@ -12,7 +12,7 @@ test.describe
       await page.getByRole('link', { name: 'Rutas' }).click()
       await page.getByRole('button', { name: 'Nueva ruta' }).click()
       await page.getByLabel('Fecha de la ruta', { exact: true }).fill('2031-05-20')
-      await page.getByRole('button', { name: 'Crear ruta' }).click()
+      await page.getByRole('button', { name: 'Crear y configurar paradas' }).click()
       await expect(page).toHaveURL(/\/panel\/rutas\/\d+$/)
 
       await page.getByRole('button', { name: /Agregar parada/ }).click()

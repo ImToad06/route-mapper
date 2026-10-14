@@ -6,10 +6,10 @@ test.describe
     test('el panel muestra el resumen del día', async ({ page }) => {
       await ingresar(page, ADMIN_FIJO.correo, ADMIN_FIJO.contrasena)
       await page.goto('/panel')
+      await expect(page.getByText('Rutas por despachar', { exact: true })).toBeVisible()
+      await expect(page.getByText('Entregas del día', { exact: true })).toBeVisible()
       await expect(page.getByText('Rutas de hoy', { exact: true })).toBeVisible()
-      await expect(page.getByText('Entregas de hoy', { exact: true })).toBeVisible()
-      await expect(page.getByText('Conductores en ruta', { exact: true })).toBeVisible()
-      await expect(page.getByText('Asignaciones sin responder', { exact: true })).toBeVisible()
+      await expect(page.getByText(/Asignaciones sin responder/)).toBeVisible()
       await capturar(page, 'p5-1-panel')
     })
 

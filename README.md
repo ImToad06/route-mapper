@@ -54,7 +54,7 @@ Al ingresar por primera vez con la contraseña temporal del seed, el sistema exi
 | `bun run lint` / `lint:fix` | Biome (formato + lint) |
 | `bun run typecheck` | `tsc --noEmit` en todos los paquetes |
 | `bun run test` | `bun test` (api, shared) y Vitest (web) |
-| `bun run test:e2e` | Playwright (requiere `bunx playwright install chromium` la primera vez) |
+| `bun run test:e2e` | Playwright en Chromium: escritorio y móvil (requiere `bunx playwright install chromium` la primera vez). Otros navegadores: ver `docs/navegadores.md` |
 | `bun run build` | Build de producción de api y web |
 | `bun run db:generate` | Genera una migración a partir del esquema Drizzle |
 | `bun run db:migrate` | Aplica migraciones pendientes |
@@ -95,22 +95,39 @@ Al ingresar por primera vez con la contraseña temporal del seed, el sistema exi
   y en `.env`: `OSRM_URL=http://localhost:5000`, `VROOM_URL=http://localhost:3300`. Sin ellos la
   aplicación funciona, pero "Calcular" y "Optimizar" quedan deshabilitados.
 
-## Producción
+## Producción y operación (Fase 6)
+
+Despliegue con HTTPS (Nginx + Let's Encrypt), respaldos nocturnos con copia externa y despliegue por GitHub Actions.
+Pasos completos de instalación, despliegues, restauración y monitoreo: **[`docs/runbook.md`](docs/runbook.md)**.
 
 ```bash
-cp .env.example .env && editar
-docker compose up -d --build              # web en :8080, api, db, backup
-bash infra/osrm/prepare.sh                # una vez, en una máquina con ≥ 4 GB RAM (Fase 3)
-docker compose --profile mapas up -d      # osrm + vroom
+infra/deploy/generar-env.sh rutas.ejemplo.com contacto@ejemplo.com   # .env con secretos aleatorios
+bash infra/osrm/prepare.sh                                           # mapa de Colombia (una vez, ≥ 4 GB RAM)
+infra/deploy/iniciar-tls.sh rutas.ejemplo.com contacto@ejemplo.com   # primer certificado
+docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile mapas up -d --build
 ```
+
+Sin dominio ni TLS (prueba local): `docker compose up -d --build` publica la web en `http://localhost:8080`.
+
+| Documento | Contenido |
+|---|---|
+| [`docs/manual-usuario.md`](docs/manual-usuario.md) | Manual para coordinadores, administradores y conductores, con capturas |
+| [`docs/runbook.md`](docs/runbook.md) | Instalación, despliegue, secretos, respaldos y restauración, mapa OSRM, monitoreo |
+| [`docs/rendimiento/README.md`](docs/rendimiento/README.md) | Prueba de carga (10 usuarios, < 3 s) y cómo reproducirla |
+| [`docs/navegadores.md`](docs/navegadores.md) | Matriz de navegadores y revisión responsive |
+| [`docs/piloto/README.md`](docs/piloto/README.md) | Protocolo del piloto y script que resume las mediciones |
+| [`docs/adr/`](docs/adr) | Decisiones de arquitectura |
+
+Comandos extra: `bun run test:carga` (carga de la API), `bunx playwright test --project=firefox e2e/compatibilidad.spec.ts`
+(navegadores), `bun docs/piloto/resumen.ts docs/piloto/mediciones.csv` (resultados del piloto).
 
 ## Flujo de trabajo con Git
 
 - `main`: producción. `dev`: integración. Ramas de trabajo desde `dev`: `feat/p<N>-<tema>`, `fix/…`, `chore/…`, `docs/…`.
 - Commits con [Conventional Commits](https://www.conventionalcommits.org/es/) (validados por commitlint):
   `feat(api): validar capacidad del vehículo`.
-- PR a `dev` con CI en verde y una revisión. Squash merge. Al cerrar cada fase: checklist de revisión,
-  tag `v0.<fase>.0` y PR `dev → main`.
+- Integración a `dev` con CI en verde y una revisión (merge local, sin PR; ver el historial de fases). Al cerrar cada fase:
+  checklist de revisión, tag `v0.<fase>.0` y merge `dev → main`.
 
 ## Convenciones
 

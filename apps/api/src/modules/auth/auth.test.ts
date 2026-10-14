@@ -160,6 +160,22 @@ describe('refresco y cierre de sesión (RF-03)', () => {
     expect((await json('POST', '/auth/refrescar')).status).toBe(401)
   })
 
+  test('Origin de otro sitio: 403 (defensa contra CSRF)', async () => {
+    const { cookieRefresco } = await iniciarSesionComo(admin.correo, admin.contrasena)
+    const res = await json('POST', '/auth/refrescar', undefined, {
+      headers: { cookie: cookieRefresco, origin: 'https://sitio-malicioso.test' },
+    })
+    expect(res.status).toBe(403)
+  })
+
+  test('Origin permitido: sigue funcionando', async () => {
+    const { cookieRefresco } = await iniciarSesionComo(admin.correo, admin.contrasena)
+    const res = await json('POST', '/auth/refrescar', undefined, {
+      headers: { cookie: cookieRefresco, origin: 'http://localhost:5173' },
+    })
+    expect(res.status).toBe(200)
+  })
+
   test('cerrar revoca la sesión', async () => {
     const { cookieRefresco } = await iniciarSesionComo(conductor.correo, conductor.contrasena)
     const res = await json('POST', '/auth/cerrar', undefined, {

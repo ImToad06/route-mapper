@@ -52,13 +52,13 @@ export function MapaRuta({ bodega, paradas, geometria, className, resaltada }: P
           <Layer
             id="recorrido-borde"
             type="line"
-            paint={{ 'line-color': '#ffffff', 'line-width': 7, 'line-opacity': 0.8 }}
+            paint={{ 'line-color': '#ffffff', 'line-width': 7, 'line-opacity': 0.9 }}
             layout={{ 'line-join': 'round', 'line-cap': 'round' }}
           />
           <Layer
             id="recorrido-linea"
             type="line"
-            paint={{ 'line-color': '#d9591c', 'line-width': 4 }}
+            paint={{ 'line-color': '#2563eb', 'line-width': 4 }}
             layout={{ 'line-join': 'round', 'line-cap': 'round' }}
           />
         </Source>
@@ -66,7 +66,7 @@ export function MapaRuta({ bodega, paradas, geometria, className, resaltada }: P
       {bodega && (
         <Marker latitude={bodega.latitud} longitude={bodega.longitud} anchor="center">
           <div
-            className="flex size-8 items-center justify-center rounded-md border-2 border-white bg-foreground text-background shadow-md"
+            className="flex size-8 items-center justify-center rounded-md border-2 border-white bg-secondary text-secondary-foreground shadow-md"
             title="Bodega"
           >
             <Warehouse className="size-4" aria-hidden="true" />

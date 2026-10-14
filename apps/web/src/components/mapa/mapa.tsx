@@ -22,7 +22,7 @@ interface Props extends Omit<MapProps, 'mapStyle' | 'initialViewState'> {
 /** Mapa base centrado en Barranquilla. Los hijos (marcadores, capas) se pasan como children. */
 export function Mapa({ children, className, initialViewState, ...props }: Props) {
   return (
-    <div className={className ?? 'h-96 w-full overflow-hidden rounded-md border'}>
+    <div className={className ?? 'h-96 w-full overflow-hidden rounded-lg border'}>
       <MapaGL
         mapStyle={ESTILO_MAPA}
         initialViewState={
@@ -33,6 +33,12 @@ export function Mapa({ children, className, initialViewState, ...props }: Props)
           }
         }
         attributionControl={{ compact: true }}
+        onLoad={(e) => {
+          // La atribución compacta nace desplegada y tapa el mapa en recuadros pequeños: se pliega.
+          const atribucion = e.target.getContainer().querySelector('.maplibregl-ctrl-attrib')
+          atribucion?.classList.remove('maplibregl-compact-show')
+          atribucion?.removeAttribute('open')
+        }}
         style={{ width: '100%', height: '100%' }}
         {...props}
       >

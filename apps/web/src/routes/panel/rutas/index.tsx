@@ -37,7 +37,7 @@ import { vehiculosActivosQuery } from '@/features/catalogos/api'
 import { crearRuta, rutasQuery } from '@/features/rutas/api'
 import { EstadoRutaBadge } from '@/features/rutas/estado-ruta'
 import { mensajeDeError } from '@/lib/api'
-import { formatearDistancia, formatearFechaLarga, formatearKg, hoyIso } from '@/lib/formato'
+import { formatearDistancia, formatearFechaCorta, formatearKg, hoyIso } from '@/lib/formato'
 import { useLista } from '@/lib/use-lista'
 
 export const Route = createFileRoute('/panel/rutas/')({ component: Rutas })
@@ -84,13 +84,14 @@ function Rutas() {
         <div>
           <h1 className="text-2xl font-semibold">Rutas</h1>
           <p className="text-sm text-muted-foreground">
-            Planificación de recorridos por fecha, con paradas, productos y vehículo.
+            Planificación, optimización y seguimiento de las rutas de despacho.
           </p>
         </div>
         <Button onClick={() => setNueva(true)}>
           <Plus className="size-4" aria-hidden="true" /> Nueva ruta
         </Button>
       </div>
+
       <BarraBusqueda
         valor={lista.buscar}
         alCambiar={lista.setBuscar}
@@ -130,7 +131,8 @@ function Rutas() {
           aria-label="Hasta"
         />
       </BarraBusqueda>
-      <div className="overflow-x-auto rounded-md border bg-card">
+
+      <div className="overflow-x-auto rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -145,7 +147,7 @@ function Rutas() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isPending && <FilaEstado colSpan={8}>Cargando…</FilaEstado>}
+            {isPending && <FilaEstado colSpan={8}>Cargando rutas…</FilaEstado>}
             {error && (
               <FilaEstado colSpan={8} tono="error">
                 {mensajeDeError(error)}
@@ -153,7 +155,7 @@ function Rutas() {
             )}
             {data?.datos.length === 0 && (
               <FilaEstado colSpan={8}>
-                No hay rutas que coincidan. Cree la primera con "Nueva ruta".
+                No hay rutas con esos filtros. Cree una con "Nueva ruta".
               </FilaEstado>
             )}
             {data?.datos.map((r) => (
@@ -162,36 +164,30 @@ function Rutas() {
                   <Link
                     to="/panel/rutas/$rutaId"
                     params={{ rutaId: String(r.id) }}
-                    className="font-mono font-medium text-primary underline-offset-2 hover:underline"
+                    className="font-mono font-medium text-secondary hover:underline"
                   >
                     {r.codigo}
                   </Link>
                 </TableCell>
-                <TableCell className="capitalize">{formatearFechaLarga(r.fecha)}</TableCell>
+                <TableCell>{formatearFechaCorta(r.fecha)}</TableCell>
                 <TableCell>
                   <EstadoRutaBadge estado={r.estado} />
                 </TableCell>
-                <TableCell className="text-right tabular-nums">{r.totalParadas}</TableCell>
+                <TableCell className="text-right">{r.totalParadas}</TableCell>
                 <TableCell
-                  className={`text-right tabular-nums ${r.vehiculo && r.cargaKg > r.vehiculo.capacidadKg ? 'text-destructive' : ''}`}
+                  className={`text-right ${r.vehiculo && r.cargaKg > r.vehiculo.capacidadKg ? 'font-medium text-destructive' : ''}`}
                 >
                   {formatearKg(r.cargaKg)}
                 </TableCell>
-                <TableCell>
-                  {r.vehiculo ? (
-                    <span className="font-mono">{r.vehiculo.placa}</span>
-                  ) : (
-                    <span className="text-muted-foreground">—</span>
-                  )}
+                <TableCell className="font-mono text-xs">
+                  {r.vehiculo?.placa ?? <span className="text-muted-foreground">—</span>}
                 </TableCell>
                 <TableCell>
                   {r.conductor?.nombre ?? (
                     <span className="text-muted-foreground">Sin asignar</span>
                   )}
                 </TableCell>
-                <TableCell className="text-right tabular-nums">
-                  {formatearDistancia(r.distanciaM)}
-                </TableCell>
+                <TableCell className="text-right">{formatearDistancia(r.distanciaM)}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -211,10 +207,10 @@ function Rutas() {
         abierto={nueva}
         alCerrar={() => setNueva(false)}
         titulo="Nueva ruta"
-        descripcion="Después de crearla agregará las paradas y los productos."
+        descripcion="Elija la fecha y, si ya lo sabe, el vehículo. Las paradas se agregan después."
         form={form}
         onSubmit={crear}
-        textoGuardar="Crear ruta"
+        textoGuardar="Crear y configurar paradas"
       >
         <CampoTexto
           control={form.control}
@@ -228,7 +224,7 @@ function Rutas() {
           name="vehiculoId"
           etiqueta="Vehículo"
           valorNulo={SIN_VEHICULO}
-          descripcion="Se usa para validar la capacidad de carga. Puede elegirse después."
+          descripcion="Se usa para validar la carga máxima (kg)."
           opciones={[
             { valor: SIN_VEHICULO, etiqueta: 'Elegir después' },
             ...(vehiculos.data?.datos.map((v) => ({
@@ -241,7 +237,7 @@ function Rutas() {
           control={form.control}
           name="observaciones"
           etiqueta="Observaciones"
-          placeholder="Opcional"
+          placeholder="Ej. Despacho matutino, zona norte"
         />
       </DialogoFormulario>
     </div>

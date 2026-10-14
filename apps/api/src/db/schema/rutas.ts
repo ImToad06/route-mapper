@@ -3,6 +3,7 @@ import { relations, sql } from 'drizzle-orm'
 import {
   check,
   date,
+  index,
   integer,
   numeric,
   pgTable,
@@ -59,6 +60,10 @@ export const ruta = pgTable(
     uniqueIndex('ruta_conductor_fecha_activa_idx')
       .on(t.conductorId, t.fecha)
       .where(sql`${t.estado} NOT IN (${estadosTerminalesSql})`),
+    // Reportes y listados filtran por periodo, conductor y estado (RNF-05).
+    index('ruta_fecha_idx').on(t.fecha),
+    index('ruta_conductor_id_idx').on(t.conductorId),
+    index('ruta_estado_idx').on(t.estado),
   ],
 )
 
@@ -85,6 +90,7 @@ export const rutaParada = pgTable(
     unique('ruta_parada_orden_unico').on(t.rutaId, t.orden),
     unique('ruta_parada_destino_unico').on(t.rutaId, t.destinoId),
     check('ruta_parada_orden_positivo', sql`${t.orden} >= 1`),
+    index('ruta_parada_destino_id_idx').on(t.destinoId),
   ],
 )
 
@@ -104,22 +110,27 @@ export const paradaProducto = pgTable(
   (t) => [
     unique('parada_producto_unico').on(t.rutaParadaId, t.productoId),
     check('parada_producto_cantidad_positiva', sql`${t.cantidad} > 0`),
+    index('parada_producto_producto_id_idx').on(t.productoId),
   ],
 )
 
 /** Historial de cambios de estado de rutas y paradas (RF-21, RF-27). */
-export const rutaHistorialEstado = pgTable('ruta_historial_estado', {
-  id: serial().primaryKey(),
-  rutaId: integer()
-    .notNull()
-    .references(() => ruta.id, { onDelete: 'cascade' }),
-  paradaId: integer().references(() => rutaParada.id, { onDelete: 'cascade' }),
-  estadoAnterior: varchar({ length: 30 }),
-  estadoNuevo: varchar({ length: 30 }).notNull(),
-  usuarioId: integer().references(() => usuario.id),
-  nota: varchar({ length: 500 }),
-  fechaHora: timestamp({ withTimezone: true }).notNull().defaultNow(),
-})
+export const rutaHistorialEstado = pgTable(
+  'ruta_historial_estado',
+  {
+    id: serial().primaryKey(),
+    rutaId: integer()
+      .notNull()
+      .references(() => ruta.id, { onDelete: 'cascade' }),
+    paradaId: integer().references(() => rutaParada.id, { onDelete: 'cascade' }),
+    estadoAnterior: varchar({ length: 30 }),
+    estadoNuevo: varchar({ length: 30 }).notNull(),
+    usuarioId: integer().references(() => usuario.id),
+    nota: varchar({ length: 500 }),
+    fechaHora: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('ruta_historial_ruta_id_idx').on(t.rutaId, t.fechaHora)],
+)
 
 export const rutaRelations = relations(ruta, ({ one, many }) => ({
   conductor: one(conductor, { fields: [ruta.conductorId], references: [conductor.id] }),
