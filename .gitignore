@@ -15,3 +15,8 @@ test-results/
 
 # Playwright
 e2e/.auth/
+
+# Archivos locales de agentes e IA
+.gemini/
+.opencode/
+query
