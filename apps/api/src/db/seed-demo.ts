@@ -105,8 +105,6 @@ const COORDINADORES = [
   'Diana Marcela Pacheco',
   'Hernán Dario Ospino',
   'Liliana Cantillo Mejía',
-  'Sergio Armenta Polo',
-  'Yuliana Bermúdez Ariza',
 ]
 const CONDUCTORES = [
   'Carlos Pérez Rojas',
@@ -119,25 +117,33 @@ const CONDUCTORES = [
   'Miguel Ángel Cervantes',
   'Rafael Olmos Pertuz',
   'Darwin Escorcia Vega',
-  'Yeison Pacheco Lara',
-  'Fabián Rodríguez Noriega',
 ]
 
 // ───────────────────────── flota y catálogos ─────────────────────────
-const FLOTA = [
-  ['TAB123', 'Camión NHR', 1800],
-  ['TBC456', 'Camión NPR', 4500],
-  ['TCD789', 'Furgón', 1200],
-  ['SXN204', 'Camión NKR', 3200],
-  ['SXP318', 'Camioneta Dmax', 1000],
-  ['TDE512', 'Camión NHR', 1800],
-  ['TEF640', 'Furgón', 1200],
-  ['SYK771', 'Camión Turbo', 3500],
-  ['TFG825', 'Camión NPR', 4500],
-  ['SZM093', 'Camioneta Hilux', 1100],
-  ['TGH367', 'Camión NKR', 3200],
-  ['TJK458', 'Furgón', 1500],
+// 30 vehículos: los primeros 10 quedan ligados a un conductor; el resto está libre para armar más rutas.
+const TIPOS_VEHICULO = [
+  ['Camión NHR', 1800],
+  ['Camión NPR', 4500],
+  ['Furgón', 1200],
+  ['Camión NKR', 3200],
+  ['Camioneta Dmax', 1000],
+  ['Camión Turbo', 3500],
+  ['Camioneta Hilux', 1100],
+  ['Camión Kodiak', 6000],
+  ['Furgón', 1500],
+  ['Camión NPR', 4500],
 ] as const
+const LETRAS = 'ABCDEFGHJKLMNPRSTUVXZ'
+const placasUsadas = new Set<string>()
+const FLOTA: [string, string, number][] = Array.from({ length: 30 }, (_, i) => {
+  const [tipo, kg] = TIPOS_VEHICULO[i % TIPOS_VEHICULO.length] as (typeof TIPOS_VEHICULO)[number]
+  let placa = ''
+  do
+    placa = `${elegir(['S', 'T'])}${LETRAS[entre(0, LETRAS.length - 1)]}${LETRAS[entre(0, LETRAS.length - 1)]}${entre(100, 999)}`
+  while (placasUsadas.has(placa))
+  placasUsadas.add(placa)
+  return [placa, tipo, kg]
+})
 
 type U = 'unidad' | 'caja' | 'paquete' | 'kg' | 'litro'
 const PRODUCTOS: readonly [string, string, U, number][] = [
@@ -630,7 +636,7 @@ for (let n = 8; n >= 1; n--) {
   const fecha = dia(-n)
   const dow = fecha.getDay()
   if (dow === 0) continue
-  const cuantas = dow === 6 ? entre(4, 5) : entre(7, 9)
+  const cuantas = dow === 6 ? entre(4, 5) : entre(6, 9)
   const orden = mezclar(conductoresActivos).slice(0, cuantas)
   for (const [j, c] of orden.entries()) {
     const { id, token } = await armarRuta(c, hoy0) // se crea con la fecha de hoy y luego se reubica
@@ -672,7 +678,7 @@ for (let n = 8; n >= 1; n--) {
   console.log(`  ${iso(fecha)}: ${cuantas} rutas`)
 }
 
-// 2) Hoy: 3 terminadas, 3 en curso, 1 aceptada, 2 pendientes de aceptación (una sin responder), 2 planificadas, 1 borrador.
+// 2) Hoy: 2 terminadas, 3 en curso, 1 aceptada, 2 pendientes de aceptación (una sin responder), 2 planificadas, 1 borrador.
 const libres = mezclar(conductoresActivos)
 const [cTerm, cCurso, cAcep, cPend] = [
   libres.slice(0, 3),
@@ -737,7 +743,7 @@ for (const [i, c] of (cPend as number[]).entries()) {
   await reubicar(id, hoy0, { asignada: new Date(ahora.getTime() - (i === 0 ? 47 : 9) * MIN) }) // la primera lleva >30 min sin respuesta
 }
 for (let i = 0; i < 3; i++) {
-  const { id, token } = await armarRuta(libres[9 + (i % 2)] as number, hoy0)
+  const { id, token } = await armarRuta(libres[8] as number, hoy0)
   if (i < 2) await llamar(token, 'POST', `/rutas/${id}/planificar`)
 }
 
