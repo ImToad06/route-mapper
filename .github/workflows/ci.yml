@@ -79,3 +79,24 @@ jobs:
           push: false
           cache-from: type=gha,scope=web
           cache-to: type=gha,mode=max,scope=web
+
+  desplegar:
+    name: Desplegar en producción
+    runs-on: ubuntu-latest
+    needs: [verificar, docker]
+    # Solo al integrar en main y cuando el servidor ya está configurado (variable DEPLOY_HABILITADO=true).
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_HABILITADO == 'true'
+    environment: produccion
+    concurrency: desplegar-produccion
+    steps:
+      - name: Clave SSH
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          printf '%s\n' "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+      - name: Ejecutar infra/deploy/desplegar.sh en el servidor
+        run: |
+          ssh -i ~/.ssh/id_deploy -o StrictHostKeyChecking=yes \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "cd ${{ vars.DEPLOY_DIR || '/opt/lh-rutas' }} && infra/deploy/desplegar.sh"

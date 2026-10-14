@@ -16,5 +16,11 @@ RUN bun run build
 
 FROM nginx:1.27-alpine AS runner
 COPY infra/docker/nginx.conf /etc/nginx/conf.d/default.conf
+COPY infra/docker/hsts-map.conf /etc/nginx/conf.d/00-hsts.conf
+COPY infra/docker/seguridad.conf infra/docker/ubicaciones.conf /etc/nginx/snippets/
+COPY infra/docker/40-recarga-certificados.sh /docker-entrypoint.d/40-recarga-certificados.sh
+RUN chmod +x /docker-entrypoint.d/40-recarga-certificados.sh
+# Plantilla de producción: se activa con NGINX_ENVSUBST_TEMPLATE_DIR=/etc/nginx/tls (docker-compose.prod.yml).
+COPY infra/docker/nginx.tls.conf.template /etc/nginx/tls/default.conf.template
 COPY --from=build /app/apps/web/dist /usr/share/nginx/html
 EXPOSE 80
