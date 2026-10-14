@@ -1,6 +1,6 @@
 # Blueprint de Render para la DEMOSTRACIÓN: base de datos + API + panel web.
 # Render → New → Blueprint → elija este repositorio y la rama dev (o main). Guía completa: docs/demo-render.md
-# El motor de rutas (OSRM/VROOM) no se despliega aquí: la demo usa recorridos ya calculados.
+# Incluye OSRM (solo el área de Barranquilla) y VROOM como servicios privados: Calcular/Optimizar funcionan en vivo.
 databases:
   - name: lh-db
     databaseName: lh_rutas
@@ -34,6 +34,11 @@ services:
           property: connectionString
       - key: JWT_SECRET
         generateValue: true
+      # Motor de rutas: servicios privados de Render, alcanzables solo por su nombre dentro de la red interna.
+      - key: OSRM_URL
+        value: http://lh-osrm:5000
+      - key: VROOM_URL
+        value: http://lh-vroom:3000
       - key: COOKIE_SEGURA
         value: "true"
       - key: CONFIAR_PROXY
@@ -41,6 +46,22 @@ services:
       # Debe ser exactamente la URL pública del panel (la de lh-rutas-web). Ajústela si Render le asignó otra.
       - key: CORS_ORIGIN
         value: https://lh-rutas-web.onrender.com
+
+  - type: pserv
+    name: lh-osrm
+    runtime: docker
+    dockerfilePath: ./infra/render/osrm/Dockerfile
+    dockerContext: ./infra/render/osrm
+    plan: starter
+    region: virginia
+
+  - type: pserv
+    name: lh-vroom
+    runtime: docker
+    dockerfilePath: ./infra/render/vroom/Dockerfile
+    dockerContext: .
+    plan: starter
+    region: virginia
 
   - type: web
     name: lh-rutas-web
