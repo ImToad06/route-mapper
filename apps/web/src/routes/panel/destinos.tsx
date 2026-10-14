@@ -7,7 +7,7 @@ import { AccionesFila } from '@/components/catalogo/acciones-fila'
 import { BarraBusqueda, FilaEstado, Paginador } from '@/components/catalogo/controles-lista'
 import { EncabezadoCatalogo } from '@/components/catalogo/encabezado-catalogo'
 import { Mapa, Marker, Popup } from '@/components/mapa/mapa'
-import { MarcadorPin } from '@/components/mapa/marcador-pin'
+import { LeyendaPines, MarcadorPin } from '@/components/mapa/marcador-pin'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -177,11 +177,9 @@ function Destinos() {
                       <div className="flex flex-wrap gap-1">
                         {!d.activo && <Badge variant="outline">Inactivo</Badge>}
                         {d.ubicacionVerificada ? (
-                          <Badge variant="secondary">Verificada</Badge>
+                          <Badge variant="success">Verificada</Badge>
                         ) : (
-                          <Badge className="bg-amber-500 text-white hover:bg-amber-500">
-                            Por verificar
-                          </Badge>
+                          <Badge variant="warning">Por verificar</Badge>
                         )}
                       </div>
                     </TableCell>
@@ -255,10 +253,7 @@ function Destinos() {
               </Popup>
             )}
           </Mapa>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Naranja: ubicación confirmada por el coordinador. Amarillo: geocodificada
-            automáticamente, pendiente de verificar.
-          </p>
+          <LeyendaPines />
         </TabsContent>
       </Tabs>
 

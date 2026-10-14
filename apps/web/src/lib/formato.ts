@@ -21,6 +21,12 @@ export const aFechaIso = (v: string | Date): string => {
   return v.slice(0, 10)
 }
 
+/** Fecha sin hora como "15 ene 2030". */
+export const formatearFechaCorta = (v: string | Date) => {
+  const [a, m, d] = aFechaIso(v).split('-').map(Number)
+  return fecha.format(new Date(a ?? 1970, (m ?? 1) - 1, d ?? 1))
+}
+
 /** Fecha sin hora como "lunes, 15 de enero de 2030". */
 export const formatearFechaLarga = (v: string | Date) => {
   const [a, m, d] = aFechaIso(v).split('-').map(Number)

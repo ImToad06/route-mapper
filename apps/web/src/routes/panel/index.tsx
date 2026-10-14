@@ -1,11 +1,23 @@
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { AlertTriangle, CheckCircle, Plus, RefreshCw, Truck } from 'lucide-react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { RefreshCw } from 'lucide-react'
+import type { ReactNode } from 'react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { resumenHoyQuery } from '@/features/reportes/api'
-import { bodegaQuery } from '@/features/rutas/api'
+import { bodegaQuery, rutasQuery } from '@/features/rutas/api'
+import { EstadoRutaBadge } from '@/features/rutas/estado-ruta'
 import { mensajeDeError } from '@/lib/api'
-import { formatearFechaLarga } from '@/lib/formato'
+import { formatearFechaLarga, formatearKg, hoyIso } from '@/lib/formato'
 
 export const Route = createFileRoute('/panel/')({ component: InicioPanel })
 
@@ -13,269 +25,199 @@ function minutosDesde(fecha: string | Date) {
   return Math.round((Date.now() - new Date(fecha).getTime()) / 60_000)
 }
 
+interface KpiProps {
+  titulo: string
+  valor: ReactNode
+  unidad?: string
+  detalle: ReactNode
+  children?: ReactNode
+}
+
+/** Indicador del día: etiqueta, cifra principal y una línea de apoyo. */
+function Kpi({ titulo, valor, unidad, detalle, children }: KpiProps) {
+  return (
+    <Card className="gap-3 py-5">
+      <CardHeader className="px-5">
+        <CardTitle className="font-sans text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+          {titulo}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="grid gap-2 px-5">
+        <div className="flex items-baseline gap-1.5">
+          <span className="font-heading text-3xl font-bold tabular-nums">{valor}</span>
+          {unidad && <span className="text-sm text-muted-foreground">{unidad}</span>}
+        </div>
+        {children}
+        <p className="text-sm text-muted-foreground">{detalle}</p>
+      </CardContent>
+    </Card>
+  )
+}
+
 function InicioPanel() {
-  const { data, isPending, error, refetch } = useQuery(resumenHoyQuery)
+  const { data, isPending, error, refetch, isFetching } = useQuery(resumenHoyQuery)
   // La bodega puede no estar configurada todavía (la API responde 409): el encabezado simplemente la omite.
   const { data: bodega } = useQuery({ ...bodegaQuery, retry: false })
+  const hoy = hoyIso()
+  const rutasHoy = useQuery({ ...rutasQuery({ pagina: 1, porPagina: 8, desde: hoy, hasta: hoy }) })
 
-  const totalGuias = data
+  const totalParadas = data
     ? data.paradas.entregadas + data.paradas.pendientes + data.paradas.fallidas
     : 0
-  const porcentajeEfectividad =
-    totalGuias > 0 ? Math.round(((data?.paradas.entregadas ?? 0) / totalGuias) * 100) : 0
-  // Avance del día: paradas ya resueltas (entregadas o con novedad) sobre todas las de hoy.
   const resueltas = data ? data.paradas.entregadas + data.paradas.fallidas : 0
-  const porcentajeAvance = totalGuias > 0 ? Math.round((resueltas / totalGuias) * 100) : 0
+  const avance = totalParadas > 0 ? Math.round((resueltas / totalParadas) * 100) : 0
+  const efectividad =
+    totalParadas > 0 ? Math.round(((data?.paradas.entregadas ?? 0) / totalParadas) * 100) : 0
 
   return (
-    <div className="grid gap-6 p-2">
-      {/* ENCABEZADO DE OPERACIONES */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-card p-6 rounded-2xl border border-border shadow-sm">
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Despacho centralizado
+    <div className="mx-auto grid max-w-7xl gap-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold">Panel de operaciones</h1>
+          <p className="text-sm text-muted-foreground">
+            <span className="inline-block first-letter:uppercase">
+              {data ? formatearFechaLarga(data.fecha) : 'Cargando…'}
             </span>
-          </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
-            Panel de Control de Operaciones - SIL
-          </h1>
-          <p className="text-sm text-muted-foreground flex items-center gap-2">
-            <span>{data ? formatearFechaLarga(data.fecha) : 'Cargando fecha...'}</span>
-            {bodega && (
-              <>
-                <span>•</span>
-                <span className="font-mono text-secondary font-semibold">{bodega.direccion}</span>
-              </>
-            )}
+            {bodega && <> · Bodega: {bodega.direccion}</>}
           </p>
         </div>
-
-        {/* Acciones Rápidas */}
-        <div className="flex items-center gap-3 flex-wrap">
-          <button
-            onClick={() => refetch()}
-            type="button"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-muted hover:bg-muted/80 text-foreground text-sm font-semibold transition-all shadow-sm"
-          >
-            <RefreshCw className="size-4 text-secondary" />
-            <span>Actualizar Estado</span>
-          </button>
-          <Link
-            to="/panel/rutas"
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-secondary hover:bg-secondary/90 text-secondary-foreground text-sm font-semibold transition-all shadow-md"
-          >
-            <Plus className="size-4" />
-            <span>+ Planificar Nueva Ruta</span>
-          </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
+            <RefreshCw
+              className={isFetching ? 'size-4 animate-spin' : 'size-4'}
+              aria-hidden="true"
+            />
+            Actualizar
+          </Button>
+          <Button asChild>
+            <Link to="/panel/rutas">Planificar ruta</Link>
+          </Button>
         </div>
       </div>
 
-      {isPending && <p className="text-muted-foreground">Cargando resumen de operaciones...</p>}
-      {error && <p className="text-destructive font-semibold">{mensajeDeError(error)}</p>}
+      {isPending && <p className="text-sm text-muted-foreground">Cargando resumen…</p>}
+      {error && <p className="text-sm font-medium text-destructive">{mensajeDeError(error)}</p>}
 
       {data && (
         <>
-          {/* TARJETAS KPI SUPERIORES (4 COLUMNAS EXACTAS) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-            {/* KPI 1: Rutas Pendientes */}
-            <Card className="border border-border/60 shadow-sm hover:shadow-md transition-all bg-card flex flex-col justify-between">
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between">
-                  <div className="flex flex-col">
-                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Por Secuenciar / Aprobar
-                    </span>
-                    <span className="text-xl font-extrabold text-foreground mt-1">
-                      Rutas Pendientes
-                    </span>
-                  </div>
-                  <div className="size-10 rounded-xl bg-muted flex items-center justify-center text-foreground font-semibold">
-                    <Truck className="size-5" />
-                  </div>
-                </div>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <Kpi
+              titulo="Rutas por despachar"
+              valor={data.rutasPorEstado.borrador + data.rutasPorEstado.planificada}
+              detalle={`${data.rutasPorEstado.borrador} en borrador · ${data.rutasPorEstado.planificada} planificadas`}
+            />
+            <Kpi
+              titulo="Rutas en curso"
+              valor={data.rutasPorEstado.en_curso}
+              detalle={`${resueltas} de ${totalParadas} paradas resueltas`}
+            >
+              <Progress value={avance} aria-label="Avance de paradas del día" />
+            </Kpi>
+            <Kpi
+              titulo="Entregas del día"
+              valor={data.paradas.entregadas}
+              unidad={`de ${totalParadas}`}
+              detalle={`${efectividad}% de efectividad · ${data.paradas.pendientes} pendientes · ${data.paradas.fallidas} con novedad`}
+            />
+            <Kpi
+              titulo="Conductores"
+              valor={data.conductoresDisponibles}
+              unidad="disponibles"
+              detalle={`${data.conductoresEnRuta} en ruta ahora`}
+            />
+          </div>
+
+          <div className="grid items-start gap-4 xl:grid-cols-3">
+            <Card className="min-w-0 gap-0 py-0 xl:col-span-2">
+              <CardHeader className="border-b px-5 pt-4 pb-4!">
+                <CardTitle className="font-sans text-base font-semibold">Rutas de hoy</CardTitle>
               </CardHeader>
-              <CardContent className="pt-0">
-                <div className="flex items-baseline justify-between mt-2">
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-3xl font-black text-foreground tracking-tight">
-                      {data.rutasPorEstado.borrador + data.rutasPorEstado.planificada}
-                    </span>
-                    <span className="text-xs text-muted-foreground font-medium">unidades</span>
-                  </div>
-                  <span className="px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 text-xs font-bold">
-                    {data.rutasPorEstado.planificada} planificadas
-                  </span>
-                </div>
-                <div className="mt-3 pt-2 bg-muted/50 rounded-lg px-3 py-1.5 flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground font-medium">En borrador</span>
-                  <span className="text-foreground font-bold">
-                    {data.rutasPorEstado.borrador} rutas
-                  </span>
-                </div>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Código</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead>Conductor</TableHead>
+                      <TableHead className="text-right">Paradas</TableHead>
+                      <TableHead className="text-right">Carga</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {rutasHoy.data?.datos.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                          No hay rutas programadas para hoy.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    {rutasHoy.data?.datos.map((r) => (
+                      <TableRow key={r.id}>
+                        <TableCell>
+                          <Link
+                            to="/panel/rutas/$rutaId"
+                            params={{ rutaId: String(r.id) }}
+                            className="font-mono font-medium text-secondary hover:underline"
+                          >
+                            {r.codigo}
+                          </Link>
+                        </TableCell>
+                        <TableCell>
+                          <EstadoRutaBadge estado={r.estado} />
+                        </TableCell>
+                        <TableCell>
+                          {r.conductor?.nombre ?? (
+                            <span className="text-muted-foreground">Sin asignar</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">{r.totalParadas}</TableCell>
+                        <TableCell className="text-right">{formatearKg(r.cargaKg)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
 
-            {/* KPI 2: En Curso */}
-            <Card className="border border-border/60 shadow-sm hover:shadow-md transition-all bg-card flex flex-col justify-between">
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between">
-                  <div className="flex flex-col">
-                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Reparto Activo
-                    </span>
-                    <span className="text-xl font-extrabold text-foreground mt-1">En Curso</span>
-                  </div>
-                  <div className="size-10 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center font-semibold">
-                    <Truck className="size-5" />
-                  </div>
-                </div>
+            <Card className="min-w-0 gap-0 py-0">
+              <CardHeader className="border-b px-5 pt-4 pb-4!">
+                <CardTitle className="font-sans text-base font-semibold">
+                  Asignaciones sin responder
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Rutas enviadas a un conductor hace más de 30 minutos sin aceptar ni rechazar.
+                </p>
               </CardHeader>
-              <CardContent className="pt-0">
-                <div className="flex items-baseline justify-between mt-2">
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-3xl font-black text-foreground tracking-tight">
-                      {data.rutasPorEstado.en_curso}
-                    </span>
-                    <span className="text-xs text-muted-foreground font-medium">vehículos</span>
-                  </div>
-                  <span className="font-mono text-secondary font-bold text-sm">
-                    {porcentajeAvance}% del día
-                  </span>
-                </div>
-                <div className="mt-4">
-                  <div className="w-full bg-muted h-2 rounded-full overflow-hidden">
-                    <div
-                      className="bg-secondary h-full rounded-full transition-all duration-700"
-                      style={{ width: `${porcentajeAvance}%` }}
-                    ></div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* KPI 3: Entregadas Hoy */}
-            <Card className="border border-border/60 shadow-sm hover:shadow-md transition-all bg-card flex flex-col justify-between">
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between">
-                  <div className="flex flex-col">
-                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Efectividad de Entrega
-                    </span>
-                    <span className="text-xl font-extrabold text-foreground mt-1">
-                      Entregadas Hoy
-                    </span>
-                  </div>
-                  <div className="size-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
-                    <CheckCircle className="size-5" />
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="flex items-baseline justify-between mt-2">
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-3xl font-black text-emerald-600 tracking-tight">
-                      {data.paradas.entregadas}
-                    </span>
-                    <span className="text-xs text-muted-foreground font-medium">
-                      / {totalGuias} guías
-                    </span>
-                  </div>
-                  <span className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 text-xs font-bold">
-                    {porcentajeEfectividad}%
-                  </span>
-                </div>
-                <div className="mt-3 pt-2 bg-muted/50 rounded-lg px-3 py-1.5 flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground font-medium">Pendientes en ruta</span>
-                  <span className="text-foreground font-bold">
-                    {data.paradas.pendientes} órdenes
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* KPI 4: Conductores Disponibles */}
-            <Card className="border border-border/60 shadow-sm hover:shadow-md transition-all bg-card flex flex-col justify-between">
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between">
-                  <div className="flex flex-col">
-                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Disponibles para asignar
-                    </span>
-                    <span className="text-xl font-extrabold text-foreground mt-1">
-                      Conductores Listos
-                    </span>
-                  </div>
-                  <div className="size-10 rounded-xl bg-blue-500/10 text-secondary flex items-center justify-center">
-                    <Truck className="size-5" />
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="flex items-baseline justify-between mt-2">
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-3xl font-black text-foreground tracking-tight">
-                      {data.conductoresDisponibles}
-                    </span>
-                    <span className="text-xs text-muted-foreground font-medium">disponibles</span>
-                  </div>
-                  <span className="px-2 py-1 rounded-lg bg-blue-500/10 text-secondary text-xs font-bold">
-                    {data.conductoresDisponibles + data.conductoresEnRuta} activos
-                  </span>
-                </div>
-                <div className="mt-3 pt-2 bg-muted/50 rounded-lg px-3 py-1.5 flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground font-medium">En ruta ahora</span>
-                  <span className="text-foreground font-bold">{data.conductoresEnRuta}</span>
-                </div>
+              <CardContent className="px-5 py-4">
+                {data.demoradas.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No hay asignaciones demoradas.</p>
+                ) : (
+                  <ul className="divide-y">
+                    {data.demoradas.map((d) => (
+                      <li
+                        key={d.id}
+                        className="flex items-center justify-between gap-3 py-2.5 text-sm"
+                      >
+                        <div className="min-w-0">
+                          <Link
+                            to="/panel/rutas/$rutaId"
+                            params={{ rutaId: String(d.id) }}
+                            className="font-mono font-medium text-secondary hover:underline"
+                          >
+                            {d.codigo}
+                          </Link>
+                          <div className="truncate text-muted-foreground">{d.conductorNombre}</div>
+                        </div>
+                        <span className="shrink-0 font-medium text-warning tabular-nums">
+                          {d.asignadaEn ? `${minutosDesde(d.asignadaEn)} min` : '—'}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </CardContent>
             </Card>
           </div>
-
-          {/* ASIGNACIONES DEMORADAS / ALERTAS */}
-          <Card className="border border-border/60 shadow-sm bg-card">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-base font-bold text-foreground">
-                <div className="size-7 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-600">
-                  <AlertTriangle className="size-4" aria-hidden="true" />
-                </div>
-                Asignaciones sin responder (&gt;30 min)
-              </CardTitle>
-              <CardDescription>
-                Rutas enviadas a conductores pendientes de aceptación inicial en el portal móvil
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {data.demoradas.length === 0 ? (
-                <div className="bg-muted/40 p-4 rounded-xl text-center text-sm text-muted-foreground font-medium">
-                  Excelente: No hay asignaciones demoradas ni alertas pendientes en el sistema.
-                </div>
-              ) : (
-                <ul className="grid gap-2">
-                  {data.demoradas.map((d) => (
-                    <li
-                      key={d.id}
-                      className="flex items-center justify-between p-3 rounded-xl bg-muted/50 text-sm"
-                    >
-                      <Link
-                        to="/panel/rutas/$rutaId"
-                        params={{ rutaId: String(d.id) }}
-                        className="font-mono font-bold text-secondary underline-offset-2 hover:underline"
-                      >
-                        {d.codigo}
-                      </Link>
-                      <span className="text-muted-foreground font-medium">
-                        {d.conductorNombre} · esperando{' '}
-                        <strong className="text-destructive">
-                          {d.asignadaEn ? minutosDesde(d.asignadaEn) : '—'} min
-                        </strong>
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
         </>
       )}
     </div>

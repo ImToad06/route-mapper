@@ -91,7 +91,8 @@ export function CampoSelect<T extends FieldValues>({
           <FormLabel>{etiqueta}</FormLabel>
           <Select
             onValueChange={field.onChange}
-            value={field.value === undefined || field.value === null ? '' : String(field.value)}
+            // 0 es el valor vacío de los ids numéricos: se muestra el texto de ayuda en vez de un campo en blanco.
+            value={field.value ? String(field.value) : ''}
           >
             <FormControl>
               <SelectTrigger>

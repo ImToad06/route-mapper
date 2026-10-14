@@ -81,7 +81,7 @@ puede filtrar por estado, fechas o buscar por código.
 
 ![Lista de rutas](manual/img/03-rutas.png)
 
-1. Pulse **Nueva ruta VRP** y elija la fecha y el vehículo.
+1. Pulse **Nueva ruta** y elija la fecha y el vehículo.
 2. **Agregue paradas** con *Agregar parada (buscar destino)*; para cada una indique los productos y cantidades. Puede reordenarlas
    arrastrando cada parada. Un destino no puede repetirse en la misma ruta.
 3. Vigile la barra de **Carga**: no puede superar la capacidad del vehículo (el sistema no deja guardar si se pasa).

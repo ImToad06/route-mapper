@@ -61,11 +61,7 @@ export function SelectorUbicacion({ direccion, valor, verificada, alCambiar }: P
             <LocateFixed className="size-4" aria-hidden="true" /> Confirmar ubicación
           </Button>
         )}
-        {valor && verificada && (
-          <span className="text-sm text-emerald-700 dark:text-emerald-400">
-            Ubicación confirmada
-          </span>
-        )}
+        {valor && verificada && <span className="text-sm text-success">Ubicación confirmada</span>}
       </div>
       {candidatos.length > 1 && (
         <ul className="grid gap-1 text-sm">
@@ -87,7 +83,7 @@ export function SelectorUbicacion({ direccion, valor, verificada, alCambiar }: P
       )}
       <Mapa
         ref={mapa}
-        className="h-72 w-full overflow-hidden rounded-md border"
+        className="h-72 w-full overflow-hidden rounded-lg border"
         initialViewState={
           valor
             ? { latitude: valor.latitud, longitude: valor.longitud, zoom: 16 }

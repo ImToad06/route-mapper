@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { type LoginInput, loginSchema } from '@lh/shared'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
-import { BadgeCheck, Eye, EyeOff, Lock, Truck, UserCheck } from 'lucide-react'
+import { Eye, EyeOff, Truck, UserCheck } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
@@ -91,80 +91,66 @@ function Ingresar() {
   }
 
   return (
-    <main className="flex min-h-dvh items-center justify-center bg-sidebar p-4 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/30 via-slate-950/90 to-slate-950 pointer-events-none"></div>
-
-      <div className="w-full max-w-md relative z-10 flex flex-col items-center">
-        {/* Top Brand Header */}
-        <div className="flex flex-col items-center text-center mb-6">
-          <div className="size-16 rounded-2xl bg-secondary/20 flex items-center justify-center mb-3 border border-secondary/30 shadow-inner text-secondary">
-            <Truck className="size-8" aria-hidden="true" />
+    <main className="flex min-h-dvh items-center justify-center bg-sidebar p-4">
+      <div className="w-full max-w-sm">
+        <div className="mb-6 flex items-center gap-3 text-white">
+          <div className="flex size-10 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
+            <Truck className="size-5" aria-hidden="true" />
           </div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/10 text-secondary text-xs font-bold uppercase tracking-wider mb-2 border border-secondary/20">
-            <span className="size-2 rounded-full bg-secondary animate-pulse"></span>
-            Acceso Corporativo Seguro
+          <div className="leading-tight">
+            <h1 className="text-lg font-semibold">L&amp;H Distribuciones</h1>
+            <p className="text-sm text-slate-400">Sistema de información logística</p>
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white">
-            L&amp;H Distribuciones
-          </h1>
-          <p className="text-sm text-slate-400 mt-1">Sistema de Información Logística (SIL)</p>
         </div>
 
-        <Card className="w-full bg-card/95 backdrop-blur-md border-border/60 shadow-2xl rounded-2xl p-4">
-          <CardHeader className="space-y-3 pb-4">
-            <div className="space-y-1">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Tipo de Perfil
-              </span>
-              <div className="grid grid-cols-2 gap-2 p-1 bg-muted rounded-xl">
-                <button
-                  type="button"
-                  aria-pressed={perfil === 'coordinador'}
-                  onClick={() => setPerfil('coordinador')}
-                  className={`flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${perfil === 'coordinador' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                >
-                  <UserCheck className="size-4 text-secondary" /> Coordinador
-                </button>
-                <button
-                  type="button"
-                  aria-pressed={perfil === 'transportista'}
-                  onClick={() => setPerfil('transportista')}
-                  className={`flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${perfil === 'transportista' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                >
-                  <Truck className="size-4 text-secondary" /> Transportista
-                </button>
-              </div>
-            </div>
+        <Card className="gap-5 py-6 shadow-lg">
+          <CardHeader className="gap-1 px-6">
+            <h2 className="text-base font-semibold">Iniciar sesión</h2>
+            <p className="text-sm text-muted-foreground">
+              Elija su perfil e ingrese con las credenciales que le asignó el administrador.
+            </p>
           </CardHeader>
-          <CardContent className="pt-0">
+          <CardContent className="px-6">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4" noValidate>
+                <fieldset className="grid gap-1.5">
+                  <legend className="mb-1.5 text-sm font-medium">Perfil</legend>
+                  <div className="grid grid-cols-2 gap-1 rounded-md bg-muted p-1">
+                    {(
+                      [
+                        { valor: 'coordinador', etiqueta: 'Coordinador', Icono: UserCheck },
+                        { valor: 'transportista', etiqueta: 'Transportista', Icono: Truck },
+                      ] as const
+                    ).map(({ valor, etiqueta, Icono }) => (
+                      <button
+                        key={valor}
+                        type="button"
+                        aria-pressed={perfil === valor}
+                        onClick={() => setPerfil(valor)}
+                        className={`flex items-center justify-center gap-2 rounded-sm px-3 py-1.5 text-sm font-medium transition-colors ${perfil === valor ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
+                      >
+                        <Icono className="size-4" aria-hidden="true" /> {etiqueta}
+                      </button>
+                    ))}
+                  </div>
+                </fieldset>
+
                 <FormField
                   control={form.control}
                   name="correo"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="flex items-center justify-between font-semibold">
-                        <span>Correo Corporativo</span>
-                        <span className="text-xs text-secondary font-normal">
-                          @lhdistribuciones.com
-                        </span>
-                      </FormLabel>
-                      <div className="relative flex items-center">
-                        <span className="absolute left-3 text-muted-foreground pointer-events-none">
-                          <BadgeCheck className="size-4" />
-                        </span>
-                        <FormControl>
-                          <Input
-                            type="email"
-                            autoComplete="username"
-                            inputMode="email"
-                            placeholder="nombre.apellido"
-                            className="pl-9 h-11 rounded-xl bg-muted/50 border-input font-medium"
-                            {...field}
-                          />
-                        </FormControl>
-                      </div>
+                      <FormLabel>Correo</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          autoComplete="username"
+                          inputMode="email"
+                          placeholder="nombre@empresa.com"
+                          className="h-10"
+                          {...field}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -174,47 +160,27 @@ function Ingresar() {
                   name="contrasena"
                   render={({ field }) => (
                     <FormItem>
-                      <div className="flex items-center justify-between">
-                        <FormLabel className="font-semibold">Contraseña</FormLabel>
-                        <button
-                          type="button"
-                          aria-expanded={ayudaClave}
-                          aria-controls="ayuda-clave"
-                          onClick={() => setAyudaClave((v) => !v)}
-                          className="text-xs text-secondary hover:underline"
-                        >
-                          ¿Olvidó su contraseña?
-                        </button>
-                      </div>
-                      {ayudaClave && (
-                        <p
-                          id="ayuda-clave"
-                          className="rounded-lg bg-muted/60 p-3 text-xs text-muted-foreground"
-                        >
-                          Pida al administrador del sistema que restablezca su contraseña. Recibirá
-                          una contraseña temporal y el sistema le pedirá crear una nueva al
-                          ingresar.
-                        </p>
-                      )}
-                      <div className="relative flex items-center">
-                        <span className="absolute left-3 text-muted-foreground pointer-events-none">
-                          <Lock className="size-4" />
-                        </span>
+                      <FormLabel>Contraseña</FormLabel>
+                      <div className="relative">
                         <FormControl>
                           <Input
                             type={verPassword ? 'text' : 'password'}
                             autoComplete="current-password"
-                            placeholder="••••••••••••"
-                            className="pl-9 pr-10 h-11 rounded-xl bg-muted/50 border-input font-medium"
+                            className="h-10 pr-10"
                             {...field}
                           />
                         </FormControl>
                         <button
                           type="button"
                           onClick={() => setVerPassword(!verPassword)}
-                          className="absolute right-3 text-muted-foreground hover:text-foreground transition-colors"
+                          aria-label={verPassword ? 'Ocultar clave' : 'Mostrar clave'}
+                          className="absolute top-0 right-0 flex h-10 w-10 items-center justify-center text-muted-foreground hover:text-foreground"
                         >
-                          {verPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                          {verPassword ? (
+                            <EyeOff className="size-4" aria-hidden="true" />
+                          ) : (
+                            <Eye className="size-4" aria-hidden="true" />
+                          )}
                         </button>
                       </div>
                       <FormMessage />
@@ -222,9 +188,30 @@ function Ingresar() {
                   )}
                 />
 
+                <div className="grid gap-2">
+                  <button
+                    type="button"
+                    aria-expanded={ayudaClave}
+                    aria-controls="ayuda-clave"
+                    onClick={() => setAyudaClave((v) => !v)}
+                    className="w-fit text-sm text-secondary hover:underline"
+                  >
+                    ¿Olvidó su contraseña?
+                  </button>
+                  {ayudaClave && (
+                    <p
+                      id="ayuda-clave"
+                      className="rounded-md border bg-muted/50 p-3 text-xs text-muted-foreground"
+                    >
+                      Pida al administrador del sistema que restablezca su contraseña. Recibirá una
+                      contraseña temporal y el sistema le pedirá crear una nueva al ingresar.
+                    </p>
+                  )}
+                </div>
+
                 <Button
                   type="submit"
-                  className="w-full h-11 rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/90 font-bold text-base shadow-md mt-2 transition-all"
+                  className="h-10 w-full bg-secondary text-secondary-foreground hover:bg-secondary/90"
                   disabled={form.formState.isSubmitting}
                 >
                   {form.formState.isSubmitting ? 'Iniciando sesión…' : 'Iniciar Sesión'}
@@ -233,6 +220,9 @@ function Ingresar() {
             </Form>
           </CardContent>
         </Card>
+        <p className="mt-6 text-center text-xs text-slate-500">
+          Acceso restringido al personal autorizado de L&amp;H Distribuciones.
+        </p>
       </div>
     </main>
   )
